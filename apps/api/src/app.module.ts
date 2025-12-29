@@ -12,11 +12,13 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { CsrfService } from './common/services/csrf.service';
 import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
     PrismaModule,
     MailModule,
+    StorageModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env'],
