@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+
 import { featuredProducts, navLinks, statsItems } from '@/components/lux/data';
 import { HeroSection } from '@/components/lux/HeroSection';
 import { HeroVisual } from '@/components/lux/HeroVisual';
@@ -5,6 +7,19 @@ import { LuxNavbar } from '@/components/lux/LuxNavbar';
 import { ProductSliderSection } from '@/components/lux/ProductSliderSection';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
 import { StatsBar } from '@/components/lux/StatsBar';
+
+export const metadata: Metadata = {
+  title: 'Trang chủ',
+  description:
+    'Khám phá bộ sưu tập giày thể thao cao cấp LUX Sneakers. Sự kết hợp hoàn hảo giữa công nghệ thể thao và thiết kế sang trọng đẳng cấp quốc tế.',
+  openGraph: {
+    title: 'LUX Sneakers | Trang chủ',
+    description:
+      'Khám phá bộ sưu tập giày thể thao cao cấp LUX Sneakers. Sự kết hợp hoàn hảo giữa công nghệ thể thao và thiết kế sang trọng.',
+    url: '/',
+    images: ['/og-image.png'],
+  },
+};
 
 export default function Home() {
   return (
