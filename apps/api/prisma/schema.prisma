@@ -71,9 +71,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  orders   Order[]
-  cart     Cart? // 1 User has only 1 active cart
-  sessions Session[] // Active sessions
+  orders                Order[]
+  cart                  Cart? // 1 User has only 1 active cart
+  sessions              Session[] // Active sessions
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@map("users")
 }
@@ -245,4 +247,32 @@ model ProductSizeStock {
   @@unique([productId, size]) // Each size of a product has only 1 record
   @@index([productId])
   @@map("product_size_stocks")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }

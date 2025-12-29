@@ -31,6 +31,50 @@
 $ pnpm install
 ```
 
+## Environment Variables
+
+Create a `.env` file in the root of the `apps/api` directory with the following variables:
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@host:port/database"
+
+# JWT Configuration
+JWT_SECRET="your-secret-key-here" # Use a strong random string in production
+JWT_ACCESS_EXPIRES_IN="15m" # Access token expiration (e.g., 15m, 1h)
+JWT_REFRESH_EXPIRES_IN="7d" # Refresh token expiration (e.g., 7d, 30d)
+
+# Email Configuration
+MAIL_USER="your-email@gmail.com"
+MAIL_PASS="your-app-password"
+
+# Frontend URL (for email links)
+FRONTEND_URL="http://localhost:3000"
+
+# Session Secret
+SESSION_SECRET="your-session-secret-here"
+
+# CORS
+CORS_ORIGIN="http://localhost:3000"
+
+# Server
+PORT=4000
+NODE_ENV="development"
+
+# Swagger (Production only)
+SWAGGER_USERNAME="admin"
+SWAGGER_PASSWORD="admin"
+```
+
+### JWT Token Expiration Format
+
+The `JWT_ACCESS_EXPIRES_IN` and `JWT_REFRESH_EXPIRES_IN` support the following formats:
+
+- `s` - seconds (e.g., `30s`)
+- `m` - minutes (e.g., `15m`)
+- `h` - hours (e.g., `1h`)
+- `d` - days (e.g., `7d`)
+
 ## Compile and run the project
 
 ```bash
