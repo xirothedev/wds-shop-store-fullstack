@@ -1,5 +1,6 @@
 import type React from 'react';
 
+import { Button } from './Button';
 import type { ProductCardProps } from './types';
 
 export function ProductCard({
@@ -39,7 +40,7 @@ export function ProductCard({
       ) : null}
       <div className="flex items-center justify-between">
         <span className="text-2xl font-bold text-amber-500">{priceLabel}</span>
-        <button className="rounded-xl bg-white/10 p-3 transition-all hover:bg-amber-500 hover:text-black">
+        <Button variant="ghost">
           <span className="sr-only">Thêm vào giỏ</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +56,7 @@ export function ProductCard({
             <path d="M5 12h14" />
             <path d="M12 5v14" />
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );

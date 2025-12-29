@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 
+import { Button } from './Button';
 import { ProductCard } from './ProductCard';
 import type { ProductCardProps } from './types';
 
@@ -34,10 +35,10 @@ export function ProductSliderSection({
           <p className="mt-2 text-gray-500">{description}</p>
         </div>
         <div className="flex space-x-4">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={() => scrollByAmount('left')}
-            className="group rounded-full border border-white/10 p-3 transition-all hover:bg-amber-500 hover:text-black"
+            className="group"
           >
             <span className="sr-only">Trước</span>
             <svg
@@ -55,11 +56,11 @@ export function ProductSliderSection({
               <path d="m12 19-7-7 7-7" />
               <path d="M19 12H5" />
             </svg>
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => scrollByAmount('right')}
-            className="group rounded-full border border-white/10 p-3 transition-all hover:bg-amber-500 hover:text-black"
+            className="group"
           >
             <span className="sr-only">Tiếp</span>
             <svg
@@ -77,7 +78,7 @@ export function ProductSliderSection({
               <path d="M5 12h14" />
               <path d="m12 5 7 7-7 7" />
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
 

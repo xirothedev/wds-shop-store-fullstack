@@ -2,6 +2,7 @@ import { Clock, RefreshCw, ShieldCheck } from 'lucide-react';
 
 import type { Product, ProductSizeStock } from '@/types/product';
 
+import { Button } from '../Button';
 import { ProductVariants } from './ProductVariants';
 
 type ProductInfoPanelProps = {
@@ -109,50 +110,35 @@ export function ProductInfoPanel({
       <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-gray-200">
         <span>Số lượng</span>
         <div className="inline-flex items-center gap-3 rounded-full bg-white/5 px-3 py-1">
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            state={quantity <= 1 ? 'disabled' : 'default'}
             onClick={onDecreaseQuantity}
             disabled={quantity <= 1}
-            className={`h-7 w-7 rounded-full border text-lg leading-none transition-all ${
-              quantity <= 1
-                ? 'cursor-not-allowed border-white/5 text-gray-500'
-                : 'border-white/15 text-gray-200 hover:border-amber-500 hover:text-amber-400'
-            }`}
           >
             –
-          </button>
+          </Button>
           <span className="w-6 text-center text-sm font-semibold">
             {quantity}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="icon"
+            state={quantity >= maxQuantity ? 'disabled' : 'default'}
             onClick={onIncreaseQuantity}
             disabled={quantity >= maxQuantity}
-            className={`h-7 w-7 rounded-full border text-lg leading-none transition-all ${
-              quantity >= maxQuantity
-                ? 'cursor-not-allowed border-white/5 text-gray-500'
-                : 'border-white/15 text-gray-200 hover:border-amber-500 hover:text-amber-400'
-            }`}
           >
             +
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row">
-        <button
-          type="button"
-          onClick={onAddToCart}
-          className="flex-1 rounded-2xl bg-linear-to-br from-amber-400 to-amber-600 px-6 py-4 text-sm font-bold tracking-[0.18em] text-black uppercase shadow-[0_0_30px_rgba(251,191,36,0.4)] transition-transform hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(251,191,36,0.6)]"
-        >
+        <Button variant="primary" className="flex-1" onClick={onAddToCart}>
           Thêm vào giỏ
-        </button>
-        <button
-          type="button"
-          className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm font-semibold tracking-[0.18em] text-white uppercase transition-all hover:bg-white/10"
-        >
+        </Button>
+        <Button variant="secondary" className="flex-1">
           Mua ngay
-        </button>
+        </Button>
       </div>
 
       <ul className="space-y-3">

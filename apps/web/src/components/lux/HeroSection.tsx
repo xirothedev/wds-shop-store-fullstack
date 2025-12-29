@@ -1,5 +1,7 @@
 import type React from 'react';
 
+import { Button } from './Button';
+
 type HeroSectionProps = {
   badge: string;
   title: React.ReactNode;
@@ -25,13 +27,13 @@ export function HeroSection({
       </h1>
       <p className="max-w-md text-lg text-gray-400">{description}</p>
       <div className="flex space-x-4">
-        <button className="rounded-xl bg-linear-to-br from-amber-400 to-amber-600 px-8 py-4 font-bold text-black transition-all hover:shadow-[0_0_30px_rgba(251,191,36,0.4)]">
+        <Button variant="primary" size="lg">
           {primaryCtaLabel}
-        </button>
+        </Button>
         {secondaryCtaLabel ? (
-          <button className="rounded-xl border border-white/20 px-8 py-4 font-bold transition-all hover:bg-white/10">
+          <Button variant="outline" size="lg">
             {secondaryCtaLabel}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

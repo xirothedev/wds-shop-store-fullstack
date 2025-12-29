@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 import type { Product, ProductSpecItem } from '@/types/product';
 
+import { Button } from '../Button';
+
 type ProductDetailsTabsProps = {
   product: Product;
 };
@@ -43,18 +45,14 @@ export function ProductDetailsTabs({ product }: ProductDetailsTabsProps) {
     <section className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-6">
       <div className="flex gap-2 rounded-2xl bg-black/40 p-1 text-sm">
         {(Object.keys(TAB_LABELS) as TabKey[]).map((key) => (
-          <button
+          <Button
             key={key}
-            type="button"
+            variant="tab"
+            state={activeTab === key ? 'active' : 'default'}
             onClick={() => setActiveTab(key)}
-            className={`flex-1 rounded-xl px-4 py-2 font-semibold transition-all ${
-              activeTab === key
-                ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]'
-                : 'text-gray-300 hover:bg-white/5'
-            }`}
           >
             {TAB_LABELS[key]}
-          </button>
+          </Button>
         ))}
       </div>
 

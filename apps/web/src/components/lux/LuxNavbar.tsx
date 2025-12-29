@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { Button } from './Button';
 import { type NavLink } from './types';
 
 type LuxNavbarProps = {
@@ -9,8 +10,8 @@ type LuxNavbarProps = {
 
 export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
   return (
-    <nav className="fixed top-0 z-50 w-full px-6 py-4">
-      <div className="mx-auto flex max-w-7xl items-center justify-between rounded-3xl border border-amber-500/20 bg-white/5 px-8 py-4 backdrop-blur-xl">
+    <nav className="fixed top-0 z-50 w-full px-6 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between rounded-3xl border border-amber-500/20 bg-white/5 px-6 py-3 backdrop-blur-xl">
         <Link
           href="/"
           className="text-2xl font-extrabold tracking-tighter outline-none"
@@ -34,14 +35,14 @@ export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
           ))}
         </div>
 
-        <div className="flex items-center space-x-4">
-          <button className="rounded-full p-2 transition-all hover:bg-white/10">
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" className="relative p-1.5">
             <span className="sr-only">Tìm kiếm</span>
             {/* Lucide search icon simplified to SVG path for now */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -52,13 +53,13 @@ export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
-          </button>
-          <button className="relative rounded-full p-2 transition-all hover:bg-white/10">
+          </Button>
+          <Button variant="ghost" className="relative p-1.5">
             <span className="sr-only">Giỏ hàng</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -71,11 +72,11 @@ export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
               <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
             </svg>
             {cartCount > 0 ? (
-              <span className="absolute top-0 right-0 rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-black">
+              <span className="absolute -top-0.5 -right-0.5 rounded-full bg-amber-500 px-1 text-[9px] leading-none font-bold text-black">
                 {cartCount}
               </span>
             ) : null}
-          </button>
+          </Button>
         </div>
       </div>
     </nav>

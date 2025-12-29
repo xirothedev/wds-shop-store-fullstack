@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import type { FormEvent } from 'react';
 
+import { Button } from '../Button';
+
 export function AuthLoginForm() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -66,13 +68,14 @@ export function AuthLoginForm() {
           </Link>
         </div>
 
-        <button
+        <Button
           type="submit"
-          className="mt-4 w-full transform rounded-xl bg-linear-to-br from-amber-400 to-amber-600 py-3.5 text-sm font-bold text-black shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(251,191,36,0.3)]"
+          variant="primary"
+          className="mt-4 w-full"
           data-lux-hover
         >
           ĐĂNG NHẬP
-        </button>
+        </Button>
       </form>
 
       <div className="mt-8 text-center text-xs text-gray-500">
