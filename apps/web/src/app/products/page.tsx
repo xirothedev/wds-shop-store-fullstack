@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { navLinks } from '@/components/lux/data';
@@ -10,9 +10,11 @@ import { ProductListCard } from '@/components/lux/product/ProductListCard';
 import { getAllProducts } from '@/lib/products';
 import type { Product } from '@/types/product';
 
+import ProductsLoading from './loading';
+
 const ITEMS_PER_PAGE = 12;
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
@@ -135,5 +137,13 @@ export default function ProductsPage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<ProductsLoading />}>
+      <ProductsContent />
+    </Suspense>
   );
 }

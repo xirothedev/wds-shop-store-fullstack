@@ -77,7 +77,10 @@ export function ProductForm({
         ratingCount: product.ratingCount,
         isPublished: product.isPublished ?? true,
         gender: product.gender || 'UNISEX',
-        category: product.category || 'running',
+        category: (product.category === 'running' ||
+        product.category === 'lifestyle'
+          ? product.category
+          : 'running') as 'running' | 'lifestyle',
         isLimited: product.isLimited || false,
         images: product.images || [],
         specs: product.specs || [],
