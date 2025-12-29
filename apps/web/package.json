@@ -1,6 +1,8 @@
 {
   "name": "web",
-  "version": "0.1.0",
+  "version": "0.0.1",
+  "description": "Web for WDS Shoe Store",
+  "author": "Group 3 WebDev Studio",
   "private": true,
   "scripts": {
     "dev": "next dev",
