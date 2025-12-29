@@ -23,8 +23,17 @@ export class CsrfMiddleware implements NestMiddleware {
       return next();
     }
 
-    // Skip CSRF for refresh token endpoint (protected by refresh token itself)
-    if (req.path === '/auth/refresh') {
+    // Skip CSRF for public auth endpoints (login, register, etc.)
+    // These endpoints are for unauthenticated users who may not have sessions yet
+    if (
+      req.path === '/auth/refresh' ||
+      req.path === '/auth/login' ||
+      req.path === '/auth/register' ||
+      req.path === '/auth/forgot-password' ||
+      req.path === '/auth/reset-password' ||
+      req.path === '/auth/verify-email' ||
+      req.path === '/auth/request-verification'
+    ) {
       return next();
     }
 

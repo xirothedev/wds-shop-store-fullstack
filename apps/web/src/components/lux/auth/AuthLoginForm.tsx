@@ -1,13 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import type { FormEvent } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { getErrorMessage, useLogin } from '@/lib/hooks/useAuth';
 
 import { Button } from '../Button';
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 export function AuthLoginForm() {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const [error, setError] = useState<string | null>(null);
+
+  const loginMutation = useLogin();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    mode: 'onBlur',
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setError(null);
+    try {
+      await loginMutation.mutateAsync(data);
+    } catch (err) {
+      setError(getErrorMessage(err as Parameters<typeof getErrorMessage>[0]));
+    }
   };
 
   return (
@@ -20,17 +45,34 @@ export function AuthLoginForm() {
         </p>
       </div>
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
+
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">
             Email
           </label>
           <input
             type="email"
-            className="text-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-500 focus:border-amber-500 focus:bg-white/5 focus:shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+            {...register('email', {
+              required: 'Email là bắt buộc',
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Email không hợp lệ',
+              },
+            })}
+            disabled={isSubmitting || loginMutation.isPending}
+            className="text-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-500 focus:border-amber-500 focus:bg-white/5 focus:shadow-[0_0_15px_rgba(251,191,36,0.15)] disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="example@email.com"
             data-lux-hover
           />
+          {errors.email && (
+            <p className="text-xs text-red-400">{errors.email.message}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -39,10 +81,17 @@ export function AuthLoginForm() {
           </label>
           <input
             type="password"
-            className="text-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-500 focus:border-amber-500 focus:bg-white/5 focus:shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+            {...register('password', {
+              required: 'Mật khẩu là bắt buộc',
+            })}
+            disabled={isSubmitting || loginMutation.isPending}
+            className="text-foreground w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm transition-all outline-none placeholder:text-gray-500 focus:border-amber-500 focus:bg-white/5 focus:shadow-[0_0_15px_rgba(251,191,36,0.15)] disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="••••••••"
             data-lux-hover
           />
+          {errors.password && (
+            <p className="text-xs text-red-400">{errors.password.message}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 pt-2 text-xs text-gray-400 sm:flex-row sm:items-center sm:justify-between">
@@ -73,8 +122,11 @@ export function AuthLoginForm() {
           variant="primary"
           className="mt-4 w-full"
           data-lux-hover
+          disabled={isSubmitting || loginMutation.isPending}
         >
-          ĐĂNG NHẬP
+          {isSubmitting || loginMutation.isPending
+            ? 'ĐANG ĐĂNG NHẬP...'
+            : 'ĐĂNG NHẬP'}
         </Button>
       </form>
 

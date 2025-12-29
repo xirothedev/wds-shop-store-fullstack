@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { footerLinks, footerSocials } from '@/components/lux/data';
 import { LuxFooter } from '@/components/lux/LuxFooter';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -88,10 +89,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
-        {children}
-        <RevealOnScroll>
-          <LuxFooter links={footerLinks} socials={footerSocials} />
-        </RevealOnScroll>
+        <QueryProvider>
+          {children}
+          <RevealOnScroll>
+            <LuxFooter links={footerLinks} socials={footerSocials} />
+          </RevealOnScroll>
+        </QueryProvider>
       </body>
     </html>
   );

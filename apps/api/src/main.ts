@@ -27,6 +27,7 @@ async function bootstrap() {
       'Accept',
       'X-Requested-With',
       'X-CSRF-Token',
+      'x-csrf-token',
     ],
     exposedHeaders: ['Content-Type', 'Authorization'],
     preflightContinue: false,
