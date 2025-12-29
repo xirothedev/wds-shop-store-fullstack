@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from './Button';
@@ -14,8 +15,15 @@ export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
       <div className="mx-auto flex max-w-7xl items-center justify-between rounded-3xl border border-amber-500/20 bg-white/5 px-6 py-3 backdrop-blur-xl">
         <Link
           href="/"
-          className="text-2xl font-extrabold tracking-tighter outline-none"
+          className="flex items-center text-2xl font-extrabold tracking-tighter outline-none"
         >
+          <Image
+            src="/logo-only.png"
+            alt="LUX Sneakers"
+            width={0}
+            height={0}
+            className="mr-2 h-7 w-7"
+          />
           <span className="text-white">LUX</span>
           <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
             SNEAKERS

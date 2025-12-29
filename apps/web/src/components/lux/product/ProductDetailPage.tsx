@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { navLinks } from '@/components/lux/data';
-import { LuxNavbar } from '@/components/lux/LuxNavbar';
+import { Breadcrumb } from '@/components/lux/Breadcrumb';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
 import type { Product, ProductImage } from '@/types/product';
 
@@ -85,9 +84,15 @@ export function ProductDetailPage({
 
   return (
     <>
-      <LuxNavbar links={navLinks} cartCount={3} />
+      <Breadcrumb
+        items={[
+          { label: 'Trang chủ', href: '/' },
+          { label: 'Sản phẩm', href: '/products' },
+          { label: product.name },
+        ]}
+      />
 
-      <section className="relative mx-auto max-w-7xl px-6 pt-24 pb-16">
+      <section className="relative mx-auto max-w-7xl px-6 pt-16 pb-16">
         <div className="pointer-events-none absolute top-20 left-1/2 -z-10 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-amber-500/10 blur-[120px]" />
 
         <RevealOnScroll>
