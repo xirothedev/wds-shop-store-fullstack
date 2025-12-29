@@ -1,65 +1,62 @@
-import Image from 'next/image';
+import { featuredProducts, navLinks, statsItems } from '@/components/lux/data';
+import { HeroSection } from '@/components/lux/HeroSection';
+import { HeroVisual } from '@/components/lux/HeroVisual';
+import { LuxNavbar } from '@/components/lux/LuxNavbar';
+import { ProductSliderSection } from '@/components/lux/ProductSliderSection';
+import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
+import { StatsBar } from '@/components/lux/StatsBar';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between bg-white px-16 py-32 sm:items-start dark:bg-black">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl leading-10 font-semibold tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{' '}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="bg-foreground text-background flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 transition-colors hover:bg-[#383838] md:w-[158px] dark:hover:bg-[#ccc]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <>
+      <LuxNavbar links={navLinks} cartCount={3} />
+
+      <section className="relative flex items-center px-6 pt-24 pb-16">
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/10 blur-[120px]" />
+
+        <div className="mx-auto grid max-w-7xl items-center gap-12 md:grid-cols-2">
+          <RevealOnScroll>
+            <HeroSection
+              badge="New Arrival 2025"
+              title={
+                <>
+                  NÂNG TẦM
+                  <br />
+                  <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+                    PHONG CÁCH
+                  </span>
+                </>
+              }
+              description="Trải nghiệm sự kết hợp hoàn hảo giữa công nghệ thể thao và thiết kế sang trọng đẳng cấp quốc tế."
+              primaryCtaLabel="MUA NGAY"
+              secondaryCtaLabel="TÌM HIỂU THÊM"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/8 px-5 transition-colors hover:border-transparent hover:bg-black/4 md:w-[158px] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </RevealOnScroll>
+
+          <RevealOnScroll>
+            <HeroVisual />
+          </RevealOnScroll>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <RevealOnScroll>
+        <ProductSliderSection
+          title={
+            <>
+              SẢN PHẨM{' '}
+              <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+                NỔI BẬT
+              </span>
+            </>
+          }
+          description="Tuyển tập những mẫu giày cháy hàng nhất tuần qua"
+          products={featuredProducts}
+        />
+      </RevealOnScroll>
+
+      <RevealOnScroll>
+        <StatsBar items={statsItems} />
+      </RevealOnScroll>
+    </>
   );
 }
