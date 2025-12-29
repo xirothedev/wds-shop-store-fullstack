@@ -1,135 +1,201 @@
-# Turborepo starter
+# WDS Shop Store - Website Bán Giày Online
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Giới thiệu
 
-## Using this example
+Đây là bài kiểm tra đầu vào WebDev Studios Gen 8 - một mini project mô phỏng môi trường làm việc thực tế. Website được xây dựng nhằm mô phỏng một hệ thống bán giày online ở mức cơ bản, tập trung vào các luồng sử dụng chính của người dùng.
 
-Run the following command:
+## Mục tiêu
 
-```sh
-npx create-turbo@latest
+Bài kiểm tra này tập trung vào việc quan sát:
+
+- Cách đọc, hiểu và triển khai một yêu cầu thực tế
+- Tư duy xây dựng một sản phẩm web hoàn chỉnh ở mức cơ bản
+- Cách tổ chức công việc, phân chia nhiệm vụ và phối hợp trong nhóm
+- Thái độ học tập, tinh thần trách nhiệm và sự chủ động của từng cá nhân
+
+## Công nghệ sử dụng
+
+### Frontend
+
+- **Framework**: Next.js (React)
+- **Language**: TypeScript
+- **HTTP Client**: Axios
+- **Styling**: CSS/Tailwind CSS
+
+### Backend
+
+- **Architecture**: 3-layer architecture
+- **Language**: TypeScript/JavaScript
+- **Authentication**: JWT
+- **Password Encryption**: argon2
+
+### Quản lý Source Code
+
+- **Version Control**: Git
+- **Monorepo**: Turborepo
+
+## Cấu trúc Project
+
+```
+wds-shop-store-fullstack/
+├── apps/
+│   ├── web/          # Frontend (Next.js)
+│   └── api/          # Backend (3-layer architecture)
+├── plans/            # Chi tiết plan cho từng module/tính năng
+└── README.md
 ```
 
-## What's inside?
+## Cài đặt và Chạy Project
 
-This Turborepo includes the following packages/apps:
+### Yêu cầu hệ thống
 
-### Apps and Packages
+- Node.js >= 24.x.x
+- pnpm >= 10.26.1
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### Cài đặt dependencies
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+```bash
+pnpm install
+```
 
-### Utilities
+### Chạy development
 
-This Turborepo has some additional tools already setup for you:
+```bash
+# Chạy tất cả apps
+pnpm dev
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+# Chạy riêng Frontend
+pnpm dev --filter=web
+
+# Chạy riêng Backend
+pnpm dev --filter=api
+```
 
 ### Build
 
-To build all apps and packages, run the following command:
+```bash
+# Build tất cả apps
+pnpm build
 
-```
-cd my-turborepo
+# Build riêng Frontend
+pnpm build --filter=web
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+# Build riêng Backend
+pnpm build --filter=api
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Các Tính Năng Chính
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### 1. Trang chủ (Home)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- Hiển thị danh sách sản phẩm dưới dạng thumbnail
+- Search bar tìm kiếm giày theo tên
+- Click vào sản phẩm để xem chi tiết
+- Bộ lọc sản phẩm (tùy chọn)
+- Lazy loading và Image optimization (tùy chọn)
 
-### Develop
+### 2. Trang chi tiết sản phẩm
 
-To develop all apps and packages, run the following command:
+- Hiển thị đầy đủ thông tin sản phẩm
+- Thêm sản phẩm vào giỏ hàng
+- Tăng/giảm số lượng muốn mua
+- Chọn size (bắt buộc cho tất cả sản phẩm)
 
-```
-cd my-turborepo
+### 3. Trang giỏ hàng
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+- Hiển thị danh sách sản phẩm đã thêm
+- Thay đổi số lượng sản phẩm
+- Xóa sản phẩm khỏi giỏ hàng
+- Lưu giỏ hàng
+- Hoàn tất mua hàng
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+### 4. Trang ĐÃ MUA
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- Hiển thị lịch sử mua hàng
+- Tính tổng số tiền đã chi tiêu (tùy chọn)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+### 5. Trang thêm sản phẩm (Admin)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+- Chỉ admin mới được truy cập
+- Form thêm sản phẩm mới
+- Xử lý phân quyền ở Frontend và Backend
 
-### Remote Caching
+### 6. Đăng ký - Đăng nhập
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+- Đăng ký tài khoản user (email + password)
+- Đăng nhập cho cả user và admin
+- Tài khoản admin được tạo sẵn trong database
+- JWT authentication
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## Yêu cầu Kỹ thuật
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+### Frontend
 
-```
-cd my-turborepo
+- ✅ ReactJS/NextJS
+- ✅ Fetch API bằng Axios + Tanstack query
+- ✅ Form action bằng react-hook-form
+- ✅ Xử lý loading, error, empty state
+- ✅ Code rõ ràng, tránh anti-pattern
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+### Backend
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+- ✅ 3-layer architecture
+- ✅ Sử dụng async/await
+- ✅ JWT authentication
+- ✅ Mã hóa password
+- ✅ Middleware cho xác thực và phân quyền
+- ✅ Xử lý lỗi 404 và các lỗi hệ thống cơ bản
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### CRUD Operations
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Website phải có đầy đủ các chức năng CRUD:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+- **Create**: Tạo mới sản phẩm, giỏ hàng, đơn mua
+- **Read**: Hiển thị danh sách sản phẩm, chi tiết sản phẩm, giỏ hàng
+- **Update**: Cập nhật số lượng, thông tin sản phẩm
+- **Delete**: Xóa sản phẩm khỏi giỏ hàng
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## UI/UX (Điểm cộng)
 
-## Useful Links
+- Giao diện dễ nhìn, bố cục rõ ràng
+- Màu sắc hài hòa, font chữ dễ đọc
+- UI nhất quán giữa các trang
+- Trải nghiệm sử dụng mượt mà
 
-Learn more about the power of Turborepo:
+**Lưu ý**: Không được sao chép y nguyên thiết kế từ các website khác. Có thể tham khảo bố cục nhưng phải tự thiết kế lại.
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## Lưu ý khi Test Hệ thống
+
+1. **Tài khoản Admin**: Được tạo sẵn trong database khi khởi tạo
+2. **Tài khoản User**: Cần đăng ký mới qua form đăng ký
+3. **Giỏ hàng**: Dữ liệu được lưu vào database, mỗi user có 1 giỏ hàng duy nhất
+4. **Phân quyền**:
+   - User không thể truy cập trang thêm sản phẩm
+   - Backend sẽ trả về `statusCode: 401, message: UNAUTHORIZED` nếu user không phải admin
+5. **Thanh toán**: Không có thanh toán thật, chỉ mock luồng hoàn tất mua hàng
+
+## Phân chia Công việc
+
+Xem chi tiết plan cho từng module/tính năng trong folder `plans/`:
+
+- `01-home-page.md` - Trang chủ
+- `02-product-detail.md` - Trang chi tiết sản phẩm
+- `03-cart.md` - Trang giỏ hàng
+- `04-purchase-history.md` - Trang ĐÃ MUA
+- `05-admin-add-product.md` - Trang thêm sản phẩm (Admin)
+- `06-auth.md` - Đăng ký và Đăng nhập
+- `07-backend-api.md` - Backend API (3-layer)
+- `08-database-schema.md` - Database Schema
+- `09-ui-ux-design.md` - UI/UX Design System
+
+## Thời gian nộp bài
+
+- **Deadline**: 23:59 ngày 15/01/2025
+- Các commit sau thời điểm này không được tính
+
+## Tài liệu tham khảo
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
+- [NestJs Documentation](https://docs.nestjs.com/)
+- [Turborepo Documentation](https://turborepo.org/docs)
