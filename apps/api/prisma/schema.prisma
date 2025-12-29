@@ -1,0 +1,240 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions", "views", "fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum SessionStatus {
+  ACTIVE
+  INACTIVE
+  REVOKED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentTransactionStatus {
+  PENDING
+  PAID
+  CANCELLED
+  EXPIRED
+  FAILED
+}
+
+model User {
+  id       String   @id @default(uuid())
+  email    String   @unique @db.VarChar(255)
+  password String?  @db.Text // Nullable because OAuth users don't have password
+  fullName String?  @db.VarChar(100)
+  phone    String?  @db.VarChar(15)
+  avatar   String?  @db.Text
+  role     UserRole @default(CUSTOMER)
+
+  emailVerified Boolean @default(false)
+  phoneVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orders   Order[]
+  cart     Cart? // 1 User has only 1 active cart
+  sessions Session[] // Active sessions
+
+  @@map("users")
+}
+
+model Session {
+  id           String  @id @default(cuid())
+  token        String  @unique @db.Text // Session token (JWT or random string)
+  refreshToken String? @unique @db.Text // Refresh token
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ipAddress String? @db.VarChar(45)
+  userAgent String? @db.Text
+
+  status    SessionStatus @default(ACTIVE)
+  expiresAt DateTime // Expiration time
+  revokedAt DateTime? // Revocation time
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Cart {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id     String @id @default(cuid())
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  size     String      @db.VarChar(10) // Product size
+  quantity Int         @default(1)
+
+  @@unique([cartId, productId, size]) // A product + size can only appear once in a cart
+  @@index([cartId])
+  @@map("cart_items")
+}
+
+model Order {
+  id   String @id @default(cuid())
+  code String @unique // Short order code for customer (e.g.: #ORD-1234)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  totalAmount   Decimal @db.Money // Final total amount
+  shippingFee   Decimal @default(0) @db.Money
+  discountValue Decimal @default(0) @db.Money
+
+  // Shipping address snapshot (Store text data to prevent changes when user edits profile)
+  shippingAddress String? @db.Text
+  shippingCity    String? @db.VarChar(100)
+  shippingState   String? @db.VarChar(100)
+  shippingZip     String? @db.VarChar(10)
+  shippingCountry String? @db.VarChar(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items              OrderItem[]
+  paymentTransaction PaymentTransaction?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String? // Can be null if product is deleted later
+  product   Product? @relation(fields: [productId], references: [id])
+
+  // Snapshot data (stored to prevent changes when product is updated)
+  productSlug String  @db.VarChar(255) // Store slug for easy lookup
+  productName String  @db.VarChar(255) // Store product name
+  size        String  @db.VarChar(10) // Product size
+  price       Decimal @db.Money // Store price at time of purchase
+  quantity    Int
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model PaymentTransaction {
+  id              String                   @id @default(cuid())
+  orderId         String                   @unique
+  order           Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transactionCode String                   @unique // PayOS transaction code
+  amount          Decimal                  @db.Money
+  status          PaymentTransactionStatus @default(PENDING)
+  paymentUrl      String? // URL for redirect
+  payosData       Json? // Store raw data from PayOS
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@map("payment_transactions")
+}
+
+model Product {
+  id          String @id @default(cuid())
+  slug        String @unique @db.VarChar(255)
+  name        String @db.VarChar(255)
+  description String @db.Text
+
+  // Product pricing
+  priceCurrent  Decimal  @db.Money // Current price
+  priceOriginal Decimal? @db.Money // Original price (if discounted)
+  priceDiscount Decimal? @db.Money // Discount amount
+
+  // Product information
+  stock    Int     @default(0) // Total stock quantity
+  hasSizes Boolean @default(false) // Whether size selection is supported (only t-shirt)
+  badge    String? @db.VarChar(50) // Display badge (Limited Edition, Official Merch)
+
+  // Product ratings
+  ratingValue Decimal @default(0) @db.Decimal(3, 2) // Rating score (0-5)
+  ratingCount Int     @default(0) // Number of ratings
+
+  // Metadata
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sizeStocks ProductSizeStock[] // Manage stock by size (only t-shirt)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([slug])
+  @@map("products")
+}
+
+/**
+ * Manage stock by size (only for t-shirt)
+ * If product doesn't have sizes, stock is stored directly in Product.stock
+ */
+model ProductSizeStock {
+  id    String @id @default(cuid())
+  size  String @db.VarChar(10) // S, M, L, XL
+  stock Int    @default(0)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, size]) // Each size of a product has only 1 record
+  @@index([productId])
+  @@map("product_size_stocks")
+}
