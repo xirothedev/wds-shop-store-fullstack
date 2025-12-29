@@ -50,20 +50,40 @@ export class StorageService {
     file: Express.Multer.File,
     options?: UploadOptions
   ): Promise<UploadResult> {
+    return this.uploadBuffer(
+      file.buffer,
+      file.originalname,
+      file.size,
+      options
+    );
+  }
+
+  /**
+   * Upload a buffer to R2 storage (useful for seed scripts)
+   * @param buffer - File buffer
+   * @param filename - Original filename
+   * @param size - File size in bytes
+   * @param options - Upload options (key, contentType, prefix)
+   * @returns Upload result with key, url, size, and contentType
+   */
+  async uploadBuffer(
+    buffer: Buffer,
+    filename: string,
+    size: number,
+    options?: UploadOptions
+  ): Promise<UploadResult> {
     try {
       // Generate key if not provided
-      const key =
-        options?.key || this.generateKey(file.originalname, options?.prefix);
+      const key = options?.key || this.generateKey(filename, options?.prefix);
 
-      // Use provided contentType or detect from file
-      const contentType =
-        options?.contentType || file.mimetype || 'application/octet-stream';
+      // Use provided contentType or default
+      const contentType = options?.contentType || 'application/octet-stream';
 
       // Upload to R2
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: key,
-        Body: file.buffer,
+        Body: buffer,
         ContentType: contentType,
       });
 
@@ -75,7 +95,7 @@ export class StorageService {
       return {
         key,
         url,
-        size: file.size,
+        size,
         contentType,
       };
     } catch (error) {
