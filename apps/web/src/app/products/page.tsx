@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
@@ -12,10 +13,24 @@ import type { Product } from '@/types/product';
 const ITEMS_PER_PAGE = 12;
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Get filters from URL params
+  const gender = searchParams.get('gender') as
+    | 'MALE'
+    | 'FEMALE'
+    | 'UNISEX'
+    | null;
+  const sale = searchParams.get('sale') === 'true';
+
+  const filters = {
+    ...(gender && { gender }),
+    ...(sale && { sale: true }),
+  };
 
   const loadMoreProducts = useCallback(() => {
     if (isLoading) return;
@@ -25,7 +40,8 @@ export default function ProductsPage() {
     setTimeout(() => {
       const { products: newProducts, hasMore: more } = getAllProducts(
         page,
-        ITEMS_PER_PAGE
+        ITEMS_PER_PAGE,
+        filters
       );
 
       setProducts((prev) => [...prev, ...newProducts]);
@@ -33,19 +49,21 @@ export default function ProductsPage() {
       setPage((prev) => prev + 1);
       setIsLoading(false);
     }, 500);
-  }, [page, isLoading]);
+  }, [page, isLoading, gender, sale]);
 
   useEffect(() => {
-    // Load initial products
+    // Reset and load initial products when filters change
+    setIsLoading(true);
     const { products: initialProducts, hasMore: more } = getAllProducts(
       1,
-      ITEMS_PER_PAGE
+      ITEMS_PER_PAGE,
+      filters
     );
     setProducts(initialProducts);
     setHasMore(more);
     setPage(2);
     setIsLoading(false);
-  }, []);
+  }, [gender, sale]);
 
   return (
     <>
@@ -56,13 +74,25 @@ export default function ProductsPage() {
           {/* Header */}
           <div className="mb-12 text-center">
             <h1 className="mb-4 text-5xl font-bold">
-              TẤT CẢ{' '}
+              {gender === 'MALE'
+                ? 'GIÀY NAM'
+                : gender === 'FEMALE'
+                  ? 'GIÀY NỮ'
+                  : sale
+                    ? 'SẢN PHẨM GIẢM GIÁ'
+                    : 'TẤT CẢ'}{' '}
               <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
                 SẢN PHẨM
               </span>
             </h1>
             <p className="text-gray-400">
-              Khám phá bộ sưu tập giày thể thao cao cấp của chúng tôi
+              {gender === 'MALE'
+                ? 'Bộ sưu tập giày thể thao dành cho nam'
+                : gender === 'FEMALE'
+                  ? 'Bộ sưu tập giày thể thao dành cho nữ'
+                  : sale
+                    ? 'Những sản phẩm đang được giảm giá'
+                    : 'Khám phá bộ sưu tập giày thể thao cao cấp của chúng tôi'}
             </p>
           </div>
 

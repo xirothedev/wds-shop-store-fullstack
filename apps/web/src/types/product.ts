@@ -40,6 +40,9 @@ export interface Product {
   updatedAt?: string;
   sizeStocks?: ProductSizeStock[]; // Flatten quan hệ ProductSizeStock cho FE
 
+  // Product gender
+  gender?: 'MALE' | 'FEMALE' | 'UNISEX';
+
   // UI-only fields (không có trong schema, chỉ dùng render FE)
   shortDescription?: string;
   images?: ProductImage[];

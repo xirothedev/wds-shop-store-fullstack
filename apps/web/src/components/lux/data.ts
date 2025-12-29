@@ -1,10 +1,10 @@
 import type { NavLink, ProductCardProps, StatItem } from './types';
 
 export const navLinks: NavLink[] = [
-  { label: 'Bộ sưu tập', href: '#collection' },
-  { label: 'Nam', href: '#men' },
-  { label: 'Nữ', href: '#women' },
-  { label: 'Giảm giá', href: '#sale' },
+  { label: 'Bộ sưu tập', href: 'products' },
+  { label: 'Nam', href: '/products?gender=MALE' },
+  { label: 'Nữ', href: '/products?gender=FEMALE' },
+  { label: 'Giảm giá', href: '/products?sale=true' },
 ];
 
 export const featuredProducts: ProductCardProps[] = [

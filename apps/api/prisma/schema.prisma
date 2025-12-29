@@ -49,6 +49,12 @@ enum PaymentTransactionStatus {
   FAILED
 }
 
+enum ProductGender {
+  MALE
+  FEMALE
+  UNISEX
+}
+
 model User {
   id       String   @id @default(uuid())
   email    String   @unique @db.VarChar(255)
@@ -206,6 +212,9 @@ model Product {
   ratingValue Decimal @default(0) @db.Decimal(3, 2) // Rating score (0-5)
   ratingCount Int     @default(0) // Number of ratings
 
+  // Product gender
+  gender ProductGender @default(UNISEX)
+
   // Metadata
   isPublished Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -217,6 +226,8 @@ model Product {
   orderItems OrderItem[]
 
   @@index([slug])
+  @@index([gender])
+  @@index([isPublished])
   @@map("products")
 }
 

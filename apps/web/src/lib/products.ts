@@ -50,6 +50,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Road / Daily Training' },
     ],
     category: 'running',
+    gender: 'UNISEX',
     isLimited: false,
     sizeStocks: [
       { id: 'gps-39', size: 'EU 39', stock: 5 },
@@ -106,6 +107,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Upper', value: 'Vải phản quang' },
     ],
     category: 'lifestyle',
+    gender: 'FEMALE',
     isLimited: false,
     sizeStocks: [
       { id: 'ma-39', size: 'EU 39', stock: 2 },
@@ -142,6 +144,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Racing / Speed Training' },
     ],
     category: 'running',
+    gender: 'MALE',
     isLimited: true,
     sizeStocks: [
       { id: 'sbp-39', size: 'EU 39', stock: 3 },
@@ -177,6 +180,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Phong cách', value: 'Streetwear / Casual' },
     ],
     category: 'lifestyle',
+    gender: 'UNISEX',
     isLimited: false,
     sizeStocks: [
       { id: 'usx-39', size: 'EU 39', stock: 8 },
@@ -213,6 +217,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Trail / Off-road' },
     ],
     category: 'running',
+    gender: 'MALE',
     isLimited: false,
     sizeStocks: [
       { id: 'tmu-39', size: 'EU 39', stock: 4 },
@@ -248,6 +253,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Năm thiết kế', value: '1990s inspired' },
     ],
     category: 'lifestyle',
+    gender: 'UNISEX',
     isLimited: false,
     sizeStocks: [
       { id: 'cr90-39', size: 'EU 39', stock: 6 },
@@ -284,6 +290,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Marathon / Long Distance' },
     ],
     category: 'running',
+    gender: 'MALE',
     isLimited: false,
     sizeStocks: [
       { id: 'me-39', size: 'EU 39', stock: 2 },
@@ -319,6 +326,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Phong cách', value: 'Luxury / Business Casual' },
     ],
     category: 'lifestyle',
+    gender: 'MALE',
     isLimited: true,
     sizeStocks: [
       { id: 'slp-39', size: 'EU 39', stock: 1 },
@@ -353,6 +361,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại sử dụng', value: 'Walking / Daily Use' },
     ],
     category: 'lifestyle',
+    gender: 'UNISEX',
     isLimited: false,
     sizeStocks: [
       { id: 'dcm-39', size: 'EU 39', stock: 10 },
@@ -389,6 +398,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Track / Sprint' },
     ],
     category: 'running',
+    gender: 'MALE',
     isLimited: false,
     sizeStocks: [
       { id: 'tsp-39', size: 'EU 39', stock: 3 },
@@ -423,6 +433,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Đa năng', value: 'Có' },
     ],
     category: 'lifestyle',
+    gender: 'FEMALE',
     isLimited: false,
     sizeStocks: [
       { id: 'cw-39', size: 'EU 39', stock: 7 },
@@ -459,6 +470,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Racing / Speed' },
     ],
     category: 'running',
+    gender: 'MALE',
     isLimited: true,
     sizeStocks: [
       { id: 'uls-39', size: 'EU 39', stock: 2 },
@@ -493,6 +505,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Đa năng', value: 'Tập luyện & Casual' },
     ],
     category: 'lifestyle',
+    gender: 'FEMALE',
     isLimited: false,
     sizeStocks: [
       { id: 'scm-39', size: 'EU 39', stock: 8 },
@@ -528,6 +541,7 @@ const MOCK_PRODUCTS: Product[] = [
       { key: 'Loại chạy', value: 'Long Distance / Endurance' },
     ],
     category: 'running',
+    gender: 'UNISEX',
     isLimited: false,
     sizeStocks: [
       { id: 'ep-39', size: 'EU 39', stock: 5 },
@@ -541,16 +555,36 @@ const MOCK_PRODUCTS: Product[] = [
 
 export function getAllProducts(
   page: number = 1,
-  limit: number = 12
+  limit: number = 12,
+  filters?: {
+    gender?: 'MALE' | 'FEMALE' | 'UNISEX';
+    sale?: boolean;
+  }
 ): { products: Product[]; hasMore: boolean } {
-  const publishedProducts = MOCK_PRODUCTS.filter(
+  let filteredProducts = MOCK_PRODUCTS.filter(
     (product) => product.isPublished !== false
   );
 
+  // Filter by gender
+  if (filters?.gender) {
+    filteredProducts = filteredProducts.filter(
+      (product) =>
+        product.gender === filters.gender || product.gender === 'UNISEX'
+    );
+  }
+
+  // Filter by sale (products with discount)
+  if (filters?.sale) {
+    filteredProducts = filteredProducts.filter(
+      (product) =>
+        product.priceOriginal && product.priceOriginal > product.priceCurrent
+    );
+  }
+
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
-  const products = publishedProducts.slice(startIndex, endIndex);
-  const hasMore = endIndex < publishedProducts.length;
+  const products = filteredProducts.slice(startIndex, endIndex);
+  const hasMore = endIndex < filteredProducts.length;
 
   return { products, hasMore };
 }
