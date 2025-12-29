@@ -593,6 +593,10 @@ export function getProductBySlug(slug: string): Product | undefined {
   return MOCK_PRODUCTS.find((product) => product.slug === slug);
 }
 
+export function getProductById(id: string): Product | undefined {
+  return MOCK_PRODUCTS.find((product) => product.id === id);
+}
+
 export function getRelatedProducts(slug: string): Product[] {
   const current = getProductBySlug(slug);
   if (!current) return MOCK_PRODUCTS.slice(0, 3);
@@ -610,4 +614,98 @@ export function getRelatedProducts(slug: string): Product[] {
   );
 
   return [...sameCategory, ...others].slice(0, 3);
+}
+
+// CRUD Functions for Admin Panel
+
+export function createProduct(
+  productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
+): Product {
+  // Generate ID and slug if not provided
+  const id = productData.slug || `product-${Date.now()}`;
+  const slug =
+    productData.slug ||
+    productData.name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+
+  // Check if slug already exists
+  if (MOCK_PRODUCTS.some((p) => p.slug === slug)) {
+    throw new Error(`Product with slug "${slug}" already exists`);
+  }
+
+  // Calculate discount if both prices are provided
+  const priceDiscount =
+    productData.priceOriginal &&
+    productData.priceOriginal > productData.priceCurrent
+      ? productData.priceOriginal - productData.priceCurrent
+      : undefined;
+
+  const newProduct: Product = {
+    ...productData,
+    id,
+    slug,
+    priceDiscount,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  MOCK_PRODUCTS.push(newProduct);
+  return newProduct;
+}
+
+export function updateProduct(
+  id: string,
+  productData: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
+): Product {
+  const index = MOCK_PRODUCTS.findIndex((p) => p.id === id);
+  if (index === -1) {
+    throw new Error(`Product with id "${id}" not found`);
+  }
+
+  const existingProduct = MOCK_PRODUCTS[index];
+
+  // Check slug uniqueness if slug is being updated
+  if (productData.slug && productData.slug !== existingProduct.slug) {
+    if (MOCK_PRODUCTS.some((p) => p.slug === productData.slug && p.id !== id)) {
+      throw new Error(`Product with slug "${productData.slug}" already exists`);
+    }
+  }
+
+  // Calculate discount if prices are updated
+  let priceDiscount = existingProduct.priceDiscount;
+  const priceCurrent = productData.priceCurrent ?? existingProduct.priceCurrent;
+  const priceOriginal =
+    productData.priceOriginal ?? existingProduct.priceOriginal;
+
+  if (priceOriginal && priceOriginal > priceCurrent) {
+    priceDiscount = priceOriginal - priceCurrent;
+  } else {
+    priceDiscount = undefined;
+  }
+
+  const updatedProduct: Product = {
+    ...existingProduct,
+    ...productData,
+    priceDiscount,
+    updatedAt: new Date().toISOString(),
+  };
+
+  MOCK_PRODUCTS[index] = updatedProduct;
+  return updatedProduct;
+}
+
+export function deleteProduct(id: string): boolean {
+  const index = MOCK_PRODUCTS.findIndex((p) => p.id === id);
+  if (index === -1) {
+    throw new Error(`Product with id "${id}" not found`);
+  }
+
+  MOCK_PRODUCTS.splice(index, 1);
+  return true;
+}
+
+export function getAllProductsForAdmin(): Product[] {
+  return [...MOCK_PRODUCTS];
 }
