@@ -2,12 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 
 import { PrismaService } from '@/prisma/prisma.service';
 
-import {
-  ItemDeleteRequestDto,
-  ItemDto,
-  ItemRequestDto,
-  QueryResponseDto,
-} from './dto/cart.dto';
+import { ItemDeleteRequestDto, ItemDto, ItemRequestDto } from './dto/cart.dto';
 
 @Injectable()
 export class CartService {
@@ -31,12 +26,32 @@ export class CartService {
     return data.id;
   }
 
-  async getAll(cartId: string): Promise<QueryResponseDto[]> {
+  async getAll(cartId: string): Promise<any[]> {
     console.log(cartId);
     const data = await this.prisma.$queryRaw<any[]>`
-      SELECT cart_items.* , product_size_stocks.stock
+      SELECT 
+        products.id,
+        products.slug,
+        products.name,
+        products.description,
+        products."priceCurrent"::numeric as "priceCurrent",
+        products."priceOriginal"::numeric,
+        products."priceDiscount"::numeric,
+        products.badge,
+        products."ratingValue"::numeric,
+        products."ratingCount",
+        products.gender,
+        products."isPublished",
+        products."createdAt",
+        products."updatedAt",
+        cart_items.id as "cartItemId",
+        cart_items.quantity,
+        cart_items.size,
+        product_size_stocks.stock
+
       FROM cart_items
-      LEFT JOIN product_size_stocks on product_size_stocks.size=cart_items.size AND product_size_stocks."productId"=cart_items."productId";
+      join products ON products.id = cart_items."productId"
+      LEFT JOIN product_size_stocks ON product_size_stocks.size=cart_items.size AND product_size_stocks."productId"=cart_items."productId";
     `;
     return data;
   }
