@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "@nestjs/mapped-types": "*"
+  },
   "name": "wds-shop-store-fullstack",
   "private": true,
   "scripts": {
