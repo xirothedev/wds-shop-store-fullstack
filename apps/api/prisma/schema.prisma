@@ -124,11 +124,15 @@ model CartItem {
   productId String
   product   Product @relation(fields: [productId], references: [id])
 
+  productSizeStockId String?
+  productSizeStock   ProductSizeStock? @relation(fields: [productSizeStockId], references: [id])
+
   size     String      @db.VarChar(10) // Product size
   quantity Int         @default(1)
 
   @@unique([cartId, productId, size]) // A product + size can only appear once in a cart
   @@index([cartId])
+  @@index([productSizeStockId])
   @@map("cart_items")
 }
 
@@ -210,6 +214,9 @@ model Product {
   // Product information
   badge String? @db.VarChar(50) // Display badge (Limited Edition, Official Merch)
 
+  // Product images (array of image URLs)
+  images String[] // Array of image URLs
+
   // Product ratings
   ratingValue Decimal @default(0) @db.Decimal(3, 2) // Rating score (0-5)
   ratingCount Int     @default(0) // Number of ratings
@@ -243,6 +250,7 @@ model ProductSizeStock {
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
 
   @@unique([productId, size]) // Each size of a product has only 1 record
   @@index([productId])
