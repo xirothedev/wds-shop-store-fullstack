@@ -12,6 +12,7 @@ import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { CsrfService } from './common/services/csrf.service';
 
 async function bootstrap() {
+  // Trigger rebuild
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   const logger = new Logger(bootstrap.name);
@@ -32,6 +33,15 @@ async function bootstrap() {
     exposedHeaders: ['Content-Type', 'Authorization'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
+  });
+
+  // Middleware to strip Content-Type for GET requests to prevent body parsing errors
+  // This handles clients that incorrectly send 'Content-Type: application/json' with empty body
+  app.use((req, res, next) => {
+    if (req.method === 'GET') {
+      delete req.headers['content-type'];
+    }
+    next();
   });
 
   // Enable cookie parser for JWT tokens
