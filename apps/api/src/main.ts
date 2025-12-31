@@ -8,8 +8,8 @@ import basicAuth from 'express-basic-auth';
 import session from 'express-session';
 
 import { AppModule } from './app.module';
-import { CsrfMiddleware } from './common/middleware/csrf.middleware';
-import { CsrfService } from './common/services/csrf.service';
+// import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+// import { CsrfService } from './common/services/csrf.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -52,9 +52,9 @@ async function bootstrap() {
   );
 
   // Setup CSRF protection
-  const csrfService = app.get(CsrfService);
-  const csrfMiddleware = new CsrfMiddleware(csrfService);
-  app.use(csrfMiddleware.use.bind(csrfMiddleware));
+  // const csrfService = app.get(CsrfService);
+  // const csrfMiddleware = new CsrfMiddleware(csrfService);
+  // app.use(csrfMiddleware.use.bind(csrfMiddleware));
 
   // Global validation pipe
   app.useGlobalPipes(
