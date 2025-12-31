@@ -7,6 +7,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { navLinks } from '@/components/lux/data';
 import { LuxNavbar } from '@/components/lux/LuxNavbar';
 import { ProductListCard } from '@/components/lux/product/ProductListCard';
+import { MiniSearchBar } from '@/components/ui/mini-search-bar';
 import { getAllProducts } from '@/lib/products';
 import type { Product } from '@/types/product';
 
@@ -70,7 +71,6 @@ function ProductsContent() {
   return (
     <>
       <LuxNavbar links={navLinks} cartCount={3} />
-
       <main className="min-h-screen pt-24">
         <div className="mx-auto max-w-7xl px-6 pb-16">
           {/* Header */}
@@ -87,6 +87,7 @@ function ProductsContent() {
                 SẢN PHẨM
               </span>
             </h1>
+
             <p className="text-gray-400">
               {gender === 'MALE'
                 ? 'Bộ sưu tập giày thể thao dành cho nam'
@@ -98,6 +99,7 @@ function ProductsContent() {
             </p>
           </div>
 
+          <MiniSearchBar />
           {/* Products Grid with Infinite Scroll */}
           <InfiniteScroll
             dataLength={products.length}

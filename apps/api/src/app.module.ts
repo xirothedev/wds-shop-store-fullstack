@@ -6,6 +6,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CartModule } from './cart/cart.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
@@ -19,6 +20,7 @@ import { StorageModule } from './storage/storage.module';
   imports: [
     PrismaModule,
     AuthModule,
+    CartModule,
     MailModule,
     StorageModule,
     ConfigModule.forRoot({

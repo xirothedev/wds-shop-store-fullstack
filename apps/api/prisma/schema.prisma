@@ -1,102 +1,46 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   output          = "../generated/prisma"
+  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions", "views"]
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
-  previewFeatures = ["postgresqlExtensions", "views", "fullTextSearchPostgres"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
-  CUSTOMER
-  ADMIN
-}
-
-enum SessionStatus {
-  ACTIVE
-  INACTIVE
-  REVOKED
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-enum PaymentTransactionStatus {
-  PENDING
-  PAID
-  CANCELLED
-  EXPIRED
-  FAILED
-}
-
-enum ProductGender {
-  MALE
-  FEMALE
-  UNISEX
-}
-
 model User {
-  id       String   @id @default(uuid())
-  email    String   @unique @db.VarChar(255)
-  password String?  @db.Text // Nullable because OAuth users don't have password
-  fullName String?  @db.VarChar(100)
-  phone    String?  @db.VarChar(15)
-  avatar   String?  @db.Text
-  role     UserRole @default(CUSTOMER)
-
-  emailVerified Boolean @default(false)
-  phoneVerified Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  orders                Order[]
-  cart                  Cart? // 1 User has only 1 active cart
-  sessions              Session[] // Active sessions
-  emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens   PasswordResetToken[]
+  id            String    @id @default(uuid())
+  email         String    @unique @db.VarChar(255)
+  password      String?
+  fullName      String?   @db.VarChar(100)
+  phone         String?   @db.VarChar(15)
+  avatar        String?
+  role          UserRole  @default(CUSTOMER)
+  emailVerified Boolean   @default(false)
+  phoneVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  cart          Cart?
+  orders        Order[]
+  sessions      Session[]
 
   @@map("users")
 }
 
 model Session {
-  id           String  @id @default(cuid())
-  token        String  @unique @db.Text // Session token (JWT or random string)
-  refreshToken String? @unique @db.Text // Refresh token
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  ipAddress String? @db.VarChar(45)
-  userAgent String? @db.Text
-
-  status    SessionStatus @default(ACTIVE)
-  expiresAt DateTime // Expiration time
-  revokedAt DateTime? // Revocation time
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(cuid())
+  token        String        @unique
+  refreshToken String?       @unique
+  userId       String
+  ipAddress    String?       @db.VarChar(45)
+  userAgent    String?
+  status       SessionStatus @default(ACTIVE)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -106,22 +50,22 @@ model Session {
 }
 
 model Cart {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  items     CartItem[]
+  id        String     @id @default(cuid())
+  userId    String     @unique
   updatedAt DateTime   @updatedAt
+  items     CartItem[]
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("carts")
 }
 
 model CartItem {
-  id     String @id @default(cuid())
-  cartId String
-  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
-
+  id        String  @id @default(cuid())
+  cartId    String
   productId String
+  size      String  @db.VarChar(10)
+  quantity  Int     @default(1)
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
 
   productSizeStockId String?
@@ -137,49 +81,39 @@ model CartItem {
 }
 
 model Order {
-  id   String @id @default(cuid())
-  code String @unique // Short order code for customer (e.g.: #ORD-1234)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  status        OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-
-  totalAmount   Decimal @db.Money // Final total amount
-  shippingFee   Decimal @default(0) @db.Money
-  discountValue Decimal @default(0) @db.Money
-
-  // Shipping address snapshot (Store text data to prevent changes when user edits profile)
-  shippingAddress String? @db.Text
-  shippingCity    String? @db.VarChar(100)
-  shippingState   String? @db.VarChar(100)
-  shippingZip     String? @db.VarChar(10)
-  shippingCountry String? @db.VarChar(100)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                 String              @id @default(cuid())
+  code               String              @unique
+  userId             String
+  status             OrderStatus         @default(PENDING)
+  paymentStatus      PaymentStatus       @default(PENDING)
+  totalAmount        Decimal             @db.Money
+  shippingFee        Decimal             @default(0) @db.Money
+  discountValue      Decimal             @default(0) @db.Money
+  shippingAddress    String?
+  shippingCity       String?             @db.VarChar(100)
+  shippingState      String?             @db.VarChar(100)
+  shippingZip        String?             @db.VarChar(10)
+  shippingCountry    String?             @db.VarChar(100)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   items              OrderItem[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   paymentTransaction PaymentTransaction?
 
   @@map("orders")
 }
 
 model OrderItem {
-  id      String @id @default(cuid())
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  productId String? // Can be null if product is deleted later
-  product   Product? @relation(fields: [productId], references: [id])
-
-  // Snapshot data (stored to prevent changes when product is updated)
-  productSlug String  @db.VarChar(255) // Store slug for easy lookup
-  productName String  @db.VarChar(255) // Store product name
-  size        String  @db.VarChar(10) // Product size
-  price       Decimal @db.Money // Store price at time of purchase
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String?
+  productSlug String   @db.VarChar(255)
+  productName String   @db.VarChar(255)
+  size        String   @db.VarChar(10)
+  price       Decimal  @db.Money
   quantity    Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@map("order_items")
@@ -188,14 +122,14 @@ model OrderItem {
 model PaymentTransaction {
   id              String                   @id @default(cuid())
   orderId         String                   @unique
-  order           Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  transactionCode String                   @unique // PayOS transaction code
+  transactionCode String                   @unique
   amount          Decimal                  @db.Money
   status          PaymentTransactionStatus @default(PENDING)
-  paymentUrl      String? // URL for redirect
-  payosData       Json? // Store raw data from PayOS
+  paymentUrl      String?
+  payosData       Json?
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
+  order           Order                    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("payment_transactions")
 }
@@ -240,47 +174,57 @@ model Product {
   @@map("products")
 }
 
-/**
- * Manage stock by size
- */
+/// *
+///  * Manage stock by size
 model ProductSizeStock {
-  id    String @id @default(cuid())
-  size  String @db.VarChar(10) // S, M, L, XL
-  stock Int    @default(0)
-
+  id        String  @id @default(cuid())
+  size      String  @db.VarChar(10)
+  stock     Int     @default(0)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
 
-  @@unique([productId, size]) // Each size of a product has only 1 record
+  @@unique([productId, size])
   @@index([productId])
   @@map("product_size_stocks")
 }
 
-model EmailVerificationToken {
-  id        String   @id @default(cuid())
-  token     String   @unique @db.Text
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([token])
-  @@index([expiresAt])
-  @@map("email_verification_tokens")
+enum UserRole {
+  CUSTOMER
+  ADMIN
 }
 
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique @db.Text
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+enum SessionStatus {
+  ACTIVE
+  INACTIVE
+  REVOKED
+}
 
-  @@index([userId])
-  @@index([token])
-  @@index([expiresAt])
-  @@map("password_reset_tokens")
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentTransactionStatus {
+  PENDING
+  PAID
+  CANCELLED
+  EXPIRED
+  FAILED
+}
+
+enum ProductGender {
+  MALE
+  FEMALE
+  UNISEX
 }
