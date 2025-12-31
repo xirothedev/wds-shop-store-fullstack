@@ -67,8 +67,16 @@ model CartItem {
   quantity  Int     @default(1)
   cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
-  @@unique([cartId, productId, size])
+
+  productSizeStockId String?
+  productSizeStock   ProductSizeStock? @relation(fields: [productSizeStockId], references: [id])
+
+  size     String      @db.VarChar(10) // Product size
+  quantity Int         @default(1)
+
+  @@unique([cartId, productId, size]) // A product + size can only appear once in a cart
   @@index([cartId])
+  @@index([productSizeStockId])
   @@map("cart_items")
 }
 
@@ -127,23 +135,38 @@ model PaymentTransaction {
 }
 
 model Product {
-  id            String             @id @default(cuid())
-  slug          String             @unique @db.VarChar(255)
-  name          String             @db.VarChar(255)
-  description   String
-  priceCurrent  Decimal            @db.Money
-  priceOriginal Decimal?           @db.Money
-  priceDiscount Decimal?           @db.Money
-  badge         String?            @db.VarChar(50)
-  ratingValue   Decimal            @default(0) @db.Decimal(3, 2)
-  ratingCount   Int                @default(0)
-  isPublished   Boolean            @default(true)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  gender        ProductGender      @default(UNISEX)
-  cartItems     CartItem[]
-  orderItems    OrderItem[]
-  sizeStocks    ProductSizeStock[]
+  id          String @id @default(cuid())
+  slug        String @unique @db.VarChar(255)
+  name        String @db.VarChar(255)
+  description String @db.Text
+
+  // Product pricing
+  priceCurrent  Decimal  @db.Money // Current price
+  priceOriginal Decimal? @db.Money // Original price (if discounted)
+  priceDiscount Decimal? @db.Money // Discount amount
+
+  // Product information
+  badge String? @db.VarChar(50) // Display badge (Limited Edition, Official Merch)
+
+  // Product images (array of image URLs)
+  images String[] // Array of image URLs
+
+  // Product ratings
+  ratingValue Decimal @default(0) @db.Decimal(3, 2) // Rating score (0-5)
+  ratingCount Int     @default(0) // Number of ratings
+
+  // Product gender
+  gender ProductGender @default(UNISEX)
+
+  // Metadata
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sizeStocks ProductSizeStock[] // Manage stock by size (only t-shirt)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   @@index([slug])
   @@index([gender])
@@ -159,6 +182,7 @@ model ProductSizeStock {
   stock     Int     @default(0)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
 
   @@unique([productId, size])
   @@index([productId])
