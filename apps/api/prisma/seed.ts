@@ -20,12 +20,10 @@ const prisma = new PrismaClient({
 class StorageHelper {
   private s3Client: S3Client;
   private bucketName: string;
-  private publicUrl: string;
   private endpoint: string;
 
   constructor() {
     this.bucketName = process.env.R2_BUCKET_NAME!;
-    this.publicUrl = process.env.R2_PUBLIC_URL!;
     this.endpoint = process.env.R2_ENDPOINT!;
 
     this.s3Client = new S3Client({
@@ -42,7 +40,8 @@ class StorageHelper {
     buffer: Buffer,
     filename: string,
     contentType: string = 'image/jpeg',
-    prefix: string = 'products'
+    prefix: string = 'products',
+    productId?: string
   ): Promise<string> {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
@@ -51,7 +50,11 @@ class StorageHelper {
       .replace(/\.\./g, '_')
       .substring(0, 255);
 
-    const key = `${prefix}/${timestamp}-${randomSuffix}-${sanitizedName}`;
+    // If productId is provided, use structure: products/{productId}/{filename}
+    // Otherwise, use old structure: products/{timestamp}-{suffix}-{filename}
+    const key = productId
+      ? `${prefix}/${productId}/${sanitizedName}`
+      : `${prefix}/${timestamp}-${randomSuffix}-${sanitizedName}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -62,8 +65,8 @@ class StorageHelper {
 
     await this.s3Client.send(command);
 
-    // Return public URL
-    return `${this.publicUrl.replace(/\/$/, '')}/${key}`;
+    // Return relative path (frontend will add domain)
+    return `/${key}`;
   }
 }
 
@@ -127,7 +130,9 @@ const SHOE_IMAGE_URLS = [
 
 async function generateProductImage(
   storage: StorageHelper,
-  imageUrl: string
+  imageUrl: string,
+  productId: string,
+  imageIndex: number
 ): Promise<string> {
   // Fetch shoe image from provided URL
   try {
@@ -145,11 +150,13 @@ async function generateProductImage(
 
       // Verify it's actually an image
       if (contentType.startsWith('image/')) {
+        const extension = contentType.split('/')[1] || 'jpg';
         const url = await storage.uploadBuffer(
           buffer,
-          `shoe-${faker.string.uuid()}.${contentType.split('/')[1] || 'jpg'}`,
+          `${imageIndex + 1}.${extension}`,
           contentType,
-          'products'
+          'products',
+          productId
         );
         return url;
       }
@@ -186,9 +193,10 @@ async function generateProductImage(
   const placeholderBuffer = Buffer.from(svg);
   return await storage.uploadBuffer(
     placeholderBuffer,
-    `shoe-placeholder-${faker.string.uuid()}.svg`,
+    `${imageIndex + 1}.svg`,
     'image/svg+xml',
-    'products'
+    'products',
+    productId
   );
 }
 
@@ -218,19 +226,17 @@ async function createProducts(storage: StorageHelper) {
       : null;
     const priceDiscount = priceOriginal ? priceOriginal - priceCurrent : null;
 
-    // Generate product image using the corresponding URL
-    console.log(`  [${i + 1}/${count}] Creating product: ${productName}...`);
-    const imageUrl = await generateProductImage(storage, shuffledImageUrls[i]);
+    // Use clean description without image URL
+    const description = faker.commerce.productDescription();
 
-    // Combine description with image URL
-    const baseDescription = faker.commerce.productDescription();
-    const description = `${baseDescription}\n\n[IMAGE_URL:${imageUrl}]`;
-
+    // Create product first (with empty images array) to get productId
+    // Note: images field will be available after running prisma generate
     const product = await prisma.product.create({
       data: {
         slug: `${slug}-${faker.string.alphanumeric(8)}`,
         name: productName,
         description,
+        images: [],
         priceCurrent,
         priceOriginal,
         priceDiscount,
@@ -256,8 +262,36 @@ async function createProducts(storage: StorageHelper) {
       },
     });
 
+    // Generate 1-5 images per product and upload to /products/{productId}/
+    const imageCount = faker.number.int({ min: 1, max: 5 });
+    console.log(`  [${i + 1}/${count}] Creating product: ${productName}...`);
+
+    const productImageUrls: string[] = [];
+
+    for (let j = 0; j < imageCount; j++) {
+      // Use different image URLs for variety, cycling through the shuffled array
+      const imageUrlIndex = (i * imageCount + j) % shuffledImageUrls.length;
+      const imageUrl = await generateProductImage(
+        storage,
+        shuffledImageUrls[imageUrlIndex],
+        product.id,
+        j
+      );
+
+      productImageUrls.push(imageUrl);
+    }
+
+    // Update product with image URLs
+    // Note: images field will be available after running prisma generate
+    await prisma.product.update({
+      where: { id: product.id },
+      data: { images: productImageUrls }, // Type assertion needed until prisma generate is run
+    });
+
     createdCount++;
-    console.log(`  ✅ Created: ${product.name} (Image: ${imageUrl})`);
+    console.log(
+      `  ✅ Created: ${product.name} (${productImageUrls.length} images)`
+    );
   }
 
   console.log(`\n✅ Created ${createdCount} products`);
