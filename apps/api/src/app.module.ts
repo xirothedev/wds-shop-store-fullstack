@@ -13,62 +13,62 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { CsrfService } from './common/services/csrf.service';
 import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { StorageModule } from './storage/storage.module';
 import { ProductsModule } from './products/products.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
-    imports: [
-        PrismaModule,
-        AuthModule,
-        MailModule,
-        StorageModule,
-        ProductsModule,
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: ['.env']
-        }),
-        ThrottlerModule.forRoot([
-            {
-                name: 'short',
-                ttl: 1000,
-                limit: 3
-            },
-            {
-                name: 'medium',
-                ttl: 10000,
-                limit: 20
-            },
-            {
-                name: 'long',
-                ttl: 60000,
-                limit: 100
-            }
-        ])
-    ],
-    controllers: [AppController],
-    providers: [
-        AppService,
-        CsrfService,
-        {
-            provide: APP_GUARD,
-            useClass: JwtAuthGuard
-        },
-        {
-            provide: APP_GUARD,
-            useClass: ThrottlerGuard
-        },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: TransformInterceptor
-        },
-        {
-            provide: APP_FILTER,
-            useClass: AllExceptionsFilter // Catch all exceptions first
-        },
-        {
-            provide: APP_FILTER,
-            useClass: HttpExceptionFilter // Then handle HTTP exceptions
-        }
-    ]
+  imports: [
+    PrismaModule,
+    AuthModule,
+    MailModule,
+    StorageModule,
+    ProductsModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env'],
+    }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 20,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    CsrfService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TransformInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter, // Catch all exceptions first
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter, // Then handle HTTP exceptions
+    },
+  ],
 })
 export class AppModule {}

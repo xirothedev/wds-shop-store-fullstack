@@ -142,10 +142,30 @@ export class ProductsService {
     );
   }
 
+  async getSearchSuggestions(q: string): Promise<string[]> {
+    if (!q) return [];
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        isPublished: true,
+        name: {
+          contains: q,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        name: true,
+      },
+      take: 10,
+    });
+
+    return products.map((product) => product.name);
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({ where: { id } });
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Product not found (VERIFY_UPDATE)');
     }
     return product;
   }

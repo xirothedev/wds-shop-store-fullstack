@@ -25,8 +25,28 @@ import { ProductsService } from './products.service';
 @ApiTags('Products')
 @Controller('/api/products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) {
+    console.log('>>> ProductsController INITIALIZED');
+  }
 
+  @Public()
+  @Get('suggestions')
+  @ApiOperation({ summary: 'Get search suggestions' })
+  @ApiQuery({
+    name: 'q',
+    required: false,
+    description: 'Search term',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of suggestions',
+  })
+  async getSuggestions(@Query('q') q?: string) {
+    return this.productsService.getSearchSuggestions(q || '');
+  }
+
+  //create product
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -34,6 +54,8 @@ export class ProductsController {
     const result = await this.productsService.create(createProductDto);
     return result;
   }
+
+  //get all products
   @Public()
   @Get()
   @ApiResponse({
@@ -44,6 +66,9 @@ export class ProductsController {
   async findAll() {
     return this.productsService.findAll();
   }
+
+  //search products
+
   @Public()
   @Get('search')
   @ApiOperation({ summary: 'Search products by name or description' })
@@ -63,10 +88,12 @@ export class ProductsController {
     return this.productsService.searchProductsWithRelevance(q || '');
   }
 
+  //get product by id
   @Public()
   @Get(':id')
   @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
   findOne(@Param('id') id: string) {
+    console.log('>>> findOne CALLED with id:', id);
     return this.productsService.findOne(id);
   }
   @Patch(':id')
@@ -83,6 +110,7 @@ export class ProductsController {
     return this.productsService.update(id, updateProductDto);
   }
 
+  //delete product
   @Delete(':id')
   @Public()
   @UseGuards(JwtAuthGuard, RolesGuard)
