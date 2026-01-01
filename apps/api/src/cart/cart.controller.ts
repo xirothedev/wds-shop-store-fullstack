@@ -9,6 +9,8 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -20,6 +22,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { Cookies } from '@/common/decorators/cookies.decorators';
+
 import { CartService } from './cart.service';
 import { ItemDto, ItemRequestDto } from './dto/cart.dto';
 
@@ -27,16 +31,24 @@ import { ItemDto, ItemRequestDto } from './dto/cart.dto';
 @ApiBearerAuth('Bearer')
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cart: CartService) {}
+  constructor(
+    private readonly cart: CartService,
+    private readonly jwt: JwtService,
+    private readonly config: ConfigService
+  ) {}
 
-  @Get(':userId')
+  @Get('')
   @ApiOperation({ summary: 'Get all items in a cart' })
   @ApiOkResponse({
     description: 'Cart items retrieved successfully',
     type: [ItemDto],
   })
   @ApiNotFoundResponse({ description: 'User does not have a cart!?' })
-  async getCart(@Param('userId') userId: string) {
+  async getCart(@Cookies('access_token') token: string) {
+    const userData = this.jwt.verify(token, {
+      secret: this.config.getOrThrow<string>('JWT_SECRET'),
+    });
+    const userId = userData.sub;
     const cartId = await this.cart.getCartIdfromUserId(userId);
     return this.cart.getAll(cartId);
   }
