@@ -1,4 +1,5 @@
 import type { Product } from '@/types/product';
+import { getProducts } from './api/products.api';
 
 const MOCK_PRODUCTS: Product[] = [
   {
@@ -553,40 +554,40 @@ const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export function getAllProducts(
+
+export async function getAllProducts(
   page: number = 1,
   limit: number = 12,
   filters?: {
     gender?: 'MALE' | 'FEMALE' | 'UNISEX';
     sale?: boolean;
   }
-): { products: Product[]; hasMore: boolean } {
-  let filteredProducts = MOCK_PRODUCTS.filter(
-    (product) => product.isPublished !== false
-  );
-
-  // Filter by gender
-  if (filters?.gender) {
-    filteredProducts = filteredProducts.filter(
-      (product) =>
-        product.gender === filters.gender || product.gender === 'UNISEX'
+): Promise<{ products: Product[]; hasMore: boolean }> {
+  try {
+    const MOCK_PRODUCTS = await getProducts(
+      filters?.gender,
+      filters?.sale ? 'true' : 'false'
     );
-  }
 
-  // Filter by sale (products with discount)
-  if (filters?.sale) {
-    filteredProducts = filteredProducts.filter(
-      (product) =>
-        product.priceOriginal && product.priceOriginal > product.priceCurrent
+    // Ensure we have an array
+    if (!Array.isArray(MOCK_PRODUCTS)) {
+      console.error('getProducts did not return an array:', MOCK_PRODUCTS);
+      return { products: [], hasMore: false };
+    }
+
+    const filteredProducts = MOCK_PRODUCTS.filter(
+      (product) => product.isPublished !== false
     );
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const products = filteredProducts.slice(startIndex, endIndex);
+    const hasMore = endIndex < filteredProducts.length;
+
+    return { products, hasMore };
+  } catch (error) {
+    console.error('Error in getAllProducts:', error);
+    return { products: [], hasMore: false };
   }
-
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const products = filteredProducts.slice(startIndex, endIndex);
-  const hasMore = endIndex < filteredProducts.length;
-
-  return { products, hasMore };
 }
 
 export function getProductBySlug(slug: string): Product | undefined {

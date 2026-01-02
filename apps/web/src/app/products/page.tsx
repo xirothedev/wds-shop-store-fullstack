@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { navLinks } from '@/components/lux/data';
@@ -29,43 +29,73 @@ function ProductsContent() {
     | null;
   const sale = searchParams.get('sale') === 'true';
 
-  const filters = {
-    ...(gender && { gender }),
-    ...(sale && { sale: true }),
-  };
+  // Memoize filters to prevent infinite loops
+  const filters = useMemo(
+    () => ({
+      ...(gender && { gender }),
+      ...(sale && { sale: true }),
+    }),
+    [gender, sale]
+  );
 
-  const loadMoreProducts = useCallback(() => {
+  const loadMoreProducts = useCallback(async () => {
     if (isLoading) return;
 
     setIsLoading(true);
-    // Simulate API delay for better UX
-    setTimeout(() => {
-      const { products: newProducts, hasMore: more } = getAllProducts(
+    try {
+      const { products: newProducts, hasMore: more } = await getAllProducts(
         page,
         ITEMS_PER_PAGE,
         filters
       );
 
-      setProducts((prev) => [...prev, ...newProducts]);
-      setHasMore(more);
-      setPage((prev) => prev + 1);
+      if (Array.isArray(newProducts)) {
+        setProducts((prev) => [...prev, ...newProducts]);
+        setHasMore(more);
+        setPage((prev) => prev + 1);
+      } else {
+        console.error('getAllProducts returned invalid products:', newProducts);
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more products:', error);
+      setHasMore(false);
+    } finally {
       setIsLoading(false);
-    }, 500);
-  }, [page, isLoading, gender, sale]);
+    }
+  }, [page, isLoading, filters]);
 
   useEffect(() => {
     // Reset and load initial products when filters change
-    setIsLoading(true);
-    const { products: initialProducts, hasMore: more } = getAllProducts(
-      1,
-      ITEMS_PER_PAGE,
-      filters
-    );
-    setProducts(initialProducts);
-    setHasMore(more);
-    setPage(2);
-    setIsLoading(false);
-  }, [gender, sale]);
+    const loadInitialProducts = async () => {
+      setIsLoading(true);
+      try {
+        const { products: initialProducts, hasMore: more } =
+          await getAllProducts(1, ITEMS_PER_PAGE, filters);
+
+        if (Array.isArray(initialProducts)) {
+          setProducts(initialProducts);
+          setHasMore(more);
+          setPage(2);
+        } else {
+          console.error(
+            'getAllProducts returned invalid products:',
+            initialProducts
+          );
+          setProducts([]);
+          setHasMore(false);
+        }
+      } catch (error) {
+        console.error('Error loading initial products:', error);
+        setProducts([]);
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialProducts();
+  }, [filters]);
 
   return (
     <>

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-import useDebounce from '@/hooks/useDebounce';
+import useDebounce from '@/lib/hooks/useDebounce';
 import { suggestions as getSuggestions } from '@/lib/api/search.api';
 type Props = {
   onClose?: () => void;
@@ -129,7 +129,7 @@ export function SearchPopover({ onClose }: Props) {
 
           {!isLoading && !error && data?.length === 0 && debounced && (
             <div className="px-3 py-4 text-center text-sm text-gray-400">
-              Không tìm thấy kết quả
+              Không tìm thấy 
             </div>
           )}
 

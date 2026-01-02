@@ -43,8 +43,8 @@ export function ProductListCard({ product }: ProductListCardProps) {
       <div className="relative aspect-square w-full overflow-hidden bg-linear-to-br from-white/5 to-white/10">
         {mainImage ? (
           <Image
-            src={mainImage.src}
-            alt={mainImage.alt || product.name}
+            src={mainImage}
+            alt={ product.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
