@@ -11,94 +11,92 @@ export function CartItemCard(product: CartItem) {
   const [quantity, setQuantity] = useState(product.quantity);
 
   return (
-    <>
-      <tr className="w-full content-center items-center overflow-hidden rounded-xl">
-        <th className="pb-8">
-          <label
-            htmlFor={`select-${product.id}`}
-            className="group cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              id={`select-${product.id}`}
-              className="peer sr-only"
-            />
-            <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
-              <p className="m-auto text-center select-none">✓</p>
-            </div>
-          </label>
-        </th>
-
-        <td className="content-center pb-8">
-          <Image
-            alt="product image"
-            src={product.images?.at(0)?.src as string}
-            width={200}
-            height={200}
-            className="rounded-2xl"
+    <div className="grid-row-[10%_10%_80%] md:grid-row-1 grid w-full grid-cols-[10%_30%_30%_30%] items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_20%_5%]">
+      <div className="row-span-3 flex justify-center md:col-span-1 md:row-span-1">
+        <label
+          htmlFor={`select-${product.id + product.size}`}
+          className="group cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            id={`select-${product.id + product.size}`}
+            className="peer sr-only"
           />
-        </td>
-
-        <td className="product-info-wrapper px-2 pb-8 text-left">
-          <a className="truncate" href={`/products/${product.slug}`}>
-            {product.name}
-          </a>
-          <p className="">Size: {product.size}</p>
-        </td>
-
-        <td className="price-wrapper pb-8 text-center">
-          <p className="m-5 text-center">
-            {Math.round(product.priceCurrent) &&
-              new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-                maximumFractionDigits: 0,
-              }).format(Math.round(product.priceCurrent))}
-          </p>
-        </td>
-
-        <td className="quantity-wrapper pb-8 text-center">
-          <div className="quantity-box mx-auto flex w-32 flex-row items-center justify-around border border-white/10">
-            <button
-              type="button"
-              onClick={() => setQuantity((q) => Math.max(0, q - 1))}
-              className="h-8 w-8 cursor-pointer select-none"
-            >
-              <FaMinus className="m-auto" />
-            </button>
-
-            <p className="w-8 text-center select-none">{quantity}</p>
-
-            <button
-              onClick={() => setQuantity((q) => Math.min(q + 1, product.stock))}
-              type="button"
-              className="h-8 w-8 cursor-pointer select-none"
-            >
-              <FaPlus className="m-auto" />
-            </button>
+          <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
+            <p className="m-auto text-center select-none">✓</p>
           </div>
-        </td>
+        </label>
+      </div>
 
-        <td className="price-wrapper pb-8 text-center">
-          <p className="m-5 text-center">
-            {Math.round(product.priceCurrent * quantity) &&
-              new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-                maximumFractionDigits: 0,
-              }).format(Math.round(product.priceCurrent * quantity))}
-          </p>
-        </td>
+      <div className="row-span-3 flex justify-center md:col-span-1 md:row-span-1">
+        <Image
+          alt="product image"
+          src={product.images?.at(0)?.src as string}
+          width={200}
+          height={200}
+          className="rounded-2xl"
+        />
+      </div>
 
-        <td className="delete-button-wrapper pb-8">
+      <div className="product-info-wrapper col-span-2 ml-0 ml-2 text-left md:col-span-1">
+        <a className="block truncate" href={`/products/${product.slug}`}>
+          {product.name}
+        </a>
+        <p className="">Size: {product.size}</p>
+      </div>
+
+      <div className="price-wrapper ml-2 text-left md:ml-0 md:text-center">
+        <p className="text-left md:text-center">
+          {Math.round(product.priceCurrent) &&
+            new Intl.NumberFormat('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+              maximumFractionDigits: 0,
+            }).format(Math.round(product.priceCurrent))}
+        </p>
+      </div>
+
+      <div className="quantity-wrapper flex flex-row justify-center text-right md:text-center">
+        <div className="quantity-box my-auto ml-auto flex w-16 flex-row items-center justify-around border border-white/10 md:mr-auto">
           <button
             type="button"
-            className="w-full cursor-pointer text-center hover:text-amber-500"
+            onClick={() => setQuantity((q) => Math.max(0, q - 1))}
+            className="h-8 w-8 cursor-pointer select-none"
           >
-            Xóa
+            <FaMinus className="m-auto h-2 w-2" />
           </button>
-        </td>
-      </tr>
-    </>
+
+          <p className="w-8 text-center select-none">{quantity}</p>
+
+          <button
+            onClick={() => setQuantity((q) => Math.min(q + 1, product.stock))}
+            type="button"
+            className="h-8 w-8 cursor-pointer select-none"
+          >
+            <FaPlus className="m-auto h-2 w-2" />
+          </button>
+        </div>
+      </div>
+
+      <div className="price-wrapper ml-2 text-left md:ml-0 md:text-center">
+        <p className="text-left md:text-center">
+          {Math.round(product.priceCurrent * quantity) &&
+            new Intl.NumberFormat('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+              maximumFractionDigits: 0,
+            }).format(Math.round(product.priceCurrent * quantity))}
+        </p>
+      </div>
+
+      <div className="delete-button-wrapper">
+        <button
+          type="button"
+          className="w-full cursor-pointer text-right hover:text-amber-500 md:text-center"
+        >
+          Xóa
+        </button>
+      </div>
+    </div>
   );
 }

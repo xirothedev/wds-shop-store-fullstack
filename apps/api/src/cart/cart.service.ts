@@ -61,6 +61,7 @@ export class CartService {
     const existingItem = await this.prisma.cartItem.findFirst({
       where: {
         productId: item.productId,
+        size: item.size,
         cartId: item.cartId,
       },
     });

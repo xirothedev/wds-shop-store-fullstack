@@ -6,7 +6,6 @@ import { getAllCartItem } from '@/lib/api/cart.api';
 import { CartItem } from '@/types/product';
 
 import { CartItemCard } from './CartItemCard';
-import { CartItemCardMobile } from './CartItemCardMobile';
 
 export function CartItemList() {
   const { data, isLoading, error } = useQuery<CartItem[], Error>({
@@ -36,89 +35,32 @@ export function CartItemList() {
       )}
       {error && <p>{error.message}</p>}
       {data && (
-        <>
-          <form className="hidden md:block" onSubmit={handlePayment}>
-            <table className="w-full max-w-7xl gap-2">
-              <colgroup>
-                <col className="w-[5%]"></col>
-                <col className="w-[15%]"></col>
-                <col className="w-[20%]"></col>
-                <col className="w-[10%]"></col>
-                <col className="w-[20%]"></col>
-                <col className="w-[25%]"></col>
-                <col className="w-[5%]"></col>
-              </colgroup>
-              <thead>
-                <tr>
-                  <th className="pb-8">
-                    <label htmlFor="select" className="group cursor-pointer">
-                      <input
-                        type="checkbox"
-                        id="select"
-                        className="peer sr-only"
-                      />
-                      <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
-                        <p className="m-auto text-center select-none">✓</p>
-                      </div>
-                    </label>
-                  </th>
-                  <th className="pb-8">Sản phẩm</th>
-                  <th className="pb-8"></th>
-                  <th className="pb-8">Đơn giá</th>
-                  <th className="pb-8">Số lượng</th>
-                  <th className="pb-8">Thành tiền</th>
-                  <th className="pb-8">Thao tác</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {data.map((product: CartItem) => (
-                  <CartItemCard key={product.cartItemId} {...product} />
-                ))}
-              </tbody>
-            </table>
-            <button type="submit">Thanh Toán</button>
-          </form>
-
-          <form className="block md:hidden" onSubmit={handlePayment}>
-            <table className="w-full max-w-3xl">
-              <colgroup>
-                <col className="w-[10%]"></col>
-                <col className="w-[30%]"></col>
-                <col className="w-[60%]"></col>
-              </colgroup>
-              <thead>
-                <tr>
-                  <th className="pb-8">
-                    <label
-                      htmlFor="select-mobile"
-                      className="group cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        id="select-mobile"
-                        className="peer sr-only"
-                      />
-                      <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
-                        <p className="m-auto text-center select-none">✓</p>
-                      </div>
-                    </label>
-                  </th>
-                  <th className="pb-8" colSpan={2}>
-                    Sản phẩm
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {data.map((product: CartItem) => (
-                  <CartItemCardMobile key={product.cartItemId} {...product} />
-                ))}
-              </tbody>
-            </table>
-            <button type="submit">Thanh Toán</button>
-          </form>
-        </>
+        <form
+          className="flex w-full flex-col items-center gap-4"
+          onSubmit={handlePayment}
+        >
+          <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_20%_5%] md:pb-8">
+            <div className="flex justify-center">
+              <label htmlFor="select" className="group cursor-pointer">
+                <input type="checkbox" id="select" className="peer sr-only" />
+                <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
+                  <p className="m-auto text-center select-none">✓</p>
+                </div>
+              </label>
+            </div>
+            <div className="col-span-3 md:col-span-2">Sản phẩm</div>
+            <div className="hidden md:block">Đơn giá</div>
+            <div className="hidden md:block">Số lượng</div>
+            <div className="hidden md:block">Thành tiền</div>
+            <div className="hidden md:block">Thao tác</div>
+          </div>
+          <div className="flex w-full max-w-7xl flex-col gap-4">
+            {data.map((product: CartItem) => (
+              <CartItemCard key={product.cartItemId} {...product} />
+            ))}
+          </div>
+          <button type="submit">Thanh Toán</button>
+        </form>
       )}
     </>
   );
