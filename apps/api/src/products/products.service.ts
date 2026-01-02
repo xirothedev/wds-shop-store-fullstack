@@ -75,14 +75,46 @@ export class ProductsService {
     };
   }
 
-  async findAll(): Promise<any[]> {
-    return this.prisma.product.findMany();
+  async findAll(gender?: string): Promise<any[]> {
+    const where: any = {};
+
+    // Strip quotes from query parameter
+    const cleanGender = gender
+      ? gender.replace(/^['"]|['"]$/g, '').trim()
+      : undefined;
+
+    if (
+      cleanGender &&
+      ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+    ) {
+      where.gender = cleanGender.toUpperCase();
+    }
+
+    return this.prisma.product.findMany({
+      where,
+    });
   }
 
-  async searchProductsWithRelevance(query: string) {
-    const searchTerm = query.trim();
+  async searchProductsWithRelevance(query: string, gender?: string) {
+    // Strip quotes from query parameters
+    const cleanQuery = query ? query.replace(/^['"]|['"]$/g, '').trim() : '';
+    const cleanGender = gender
+      ? gender.replace(/^['"]|['"]$/g, '').trim()
+      : undefined;
+
+    const searchTerm = cleanQuery;
+    const genderFilter =
+      cleanGender &&
+      ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+        ? cleanGender.toUpperCase()
+        : null;
+
     if (!searchTerm) {
-      return this.prisma.product.findMany();
+      const where: any = {};
+      if (genderFilter) {
+        where.gender = genderFilter;
+      }
+      return this.prisma.product.findMany({ where });
     }
 
     // Using raw SQL for PostgreSQL full-text search with ranking
@@ -120,13 +152,20 @@ export class ProductsService {
     `;
 
     // Fetch full product data with relations
+    // Apply gender filter in Prisma query for safety
     const productIds = products.map((p) => p.id);
-    const fullProducts = await this.prisma.product.findMany({
-      where: {
-        id: {
-          in: productIds,
-        },
+    const whereClause: any = {
+      id: {
+        in: productIds,
       },
+    };
+
+    if (genderFilter) {
+      whereClause.gender = genderFilter;
+    }
+
+    const fullProducts = await this.prisma.product.findMany({
+      where: whereClause,
       include: {
         sizeStocks: true,
       },
@@ -142,17 +181,32 @@ export class ProductsService {
     );
   }
 
-  async getSearchSuggestions(q: string): Promise<string[]> {
-    if (!q) return [];
+  async getSearchSuggestions(q: string, gender?: string): Promise<string[]> {
+    // Strip quotes from query parameters
+    const cleanQ = q ? q.replace(/^['"]|['"]$/g, '').trim() : '';
+    const cleanGender = gender
+      ? gender.replace(/^['"]|['"]$/g, '').trim()
+      : undefined;
+
+    if (!cleanQ) return [];
+
+    const where: any = {
+      isPublished: true,
+      name: {
+        contains: cleanQ,
+        mode: 'insensitive',
+      },
+    };
+
+    if (
+      cleanGender &&
+      ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+    ) {
+      where.gender = cleanGender.toUpperCase();
+    }
 
     const products = await this.prisma.product.findMany({
-      where: {
-        isPublished: true,
-        name: {
-          contains: q,
-          mode: 'insensitive',
-        },
-      },
+      where,
       select: {
         name: true,
       },

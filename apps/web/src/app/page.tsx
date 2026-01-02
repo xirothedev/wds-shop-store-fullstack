@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  
   return (
     <>
       <LuxNavbar links={navLinks} cartCount={3} />

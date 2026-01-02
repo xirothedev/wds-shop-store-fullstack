@@ -33,6 +33,12 @@ export class ProductsController {
   @Get('suggestions')
   @ApiOperation({ summary: 'Get search suggestions' })
   @ApiQuery({
+    name: 'gender',
+    required: false,
+    description: 'Filter by gender (MALE, FEMALE, UNISEX)',
+    enum: ['MALE', 'FEMALE', 'UNISEX'],
+  })
+  @ApiQuery({
     name: 'q',
     required: false,
     description: 'Search term',
@@ -42,8 +48,11 @@ export class ProductsController {
     status: 200,
     description: 'List of suggestions',
   })
-  async getSuggestions(@Query('q') q?: string) {
-    return this.productsService.getSearchSuggestions(q || '');
+  async getSuggestions(
+    @Query('gender') gender?: string,
+    @Query('q') q?: string
+  ) {
+    return this.productsService.getSearchSuggestions(q || '', gender);
   }
 
   //create product
@@ -55,16 +64,23 @@ export class ProductsController {
     return result;
   }
 
-  //get all products
+  //get products
   @Public()
   @Get()
+  @ApiOperation({ summary: 'Get all products' })
+  @ApiQuery({
+    name: 'gender',
+    required: false,
+    description: 'Filter by gender (MALE, FEMALE, UNISEX)',
+    enum: ['MALE', 'FEMALE', 'UNISEX'],
+  })
   @ApiResponse({
     status: 200,
     description: 'List products',
     type: [ProductDto],
   })
-  async findAll() {
-    return this.productsService.findAll();
+  async findAll(@Query('gender') gender?: string) {
+    return this.productsService.findAll(gender);
   }
 
   //search products
@@ -78,14 +94,20 @@ export class ProductsController {
     type: [ProductDto],
   })
   @ApiQuery({
+    name: 'gender',
+    required: false,
+    description: 'Filter by gender (MALE, FEMALE, UNISEX)',
+    enum: ['MALE', 'FEMALE', 'UNISEX'],
+  })
+  @ApiQuery({
     name: 'q',
     required: false,
     description: 'Search term',
     type: String,
     example: 'shirt',
   })
-  async search(@Query('q') q?: string) {
-    return this.productsService.searchProductsWithRelevance(q || '');
+  async search(@Query('gender') gender?: string, @Query('q') q?: string) {
+    return this.productsService.searchProductsWithRelevance(q || '', gender);
   }
 
   //get product by id
