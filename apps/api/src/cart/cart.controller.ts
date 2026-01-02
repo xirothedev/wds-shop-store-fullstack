@@ -8,9 +8,8 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -23,34 +22,28 @@ import {
 } from '@nestjs/swagger';
 
 import { Cookies } from '@/common/decorators/cookies.decorators';
+import { JwtAuthGuard } from '@/common/guards/jwt.guard';
 
 import { CartService } from './cart.service';
-import { ItemDto, ItemRequestDto } from './dto/cart.dto';
+import { ItemDto, ItemRequestDto, QueryResponseDto } from './dto/cart.dto';
 
 @ApiTags('Cart')
 @ApiBearerAuth('Bearer')
+@UseGuards(JwtAuthGuard)
 @Controller('cart')
 export class CartController {
-  constructor(
-    private readonly cart: CartService,
-    private readonly jwt: JwtService,
-    private readonly config: ConfigService
-  ) {}
+  constructor(private readonly cart: CartService) {}
 
   @Get('')
   @ApiOperation({ summary: 'Get all items in a cart' })
   @ApiOkResponse({
     description: 'Cart items retrieved successfully',
-    type: [ItemDto],
+    type: [QueryResponseDto],
   })
   @ApiNotFoundResponse({ description: 'User does not have a cart!?' })
   async getCart(@Cookies('access_token') token: string) {
-    const userData = this.jwt.verify(token, {
-      secret: this.config.getOrThrow<string>('JWT_SECRET'),
-    });
-    const userId = userData.sub;
-    const cartId = await this.cart.getCartIdfromUserId(userId);
-    return this.cart.getAll(cartId);
+    const cartId = await this.cart.getCartIdFromToken(token);
+    return await this.cart.getAll(cartId);
   }
 
   @Post('items')
@@ -62,7 +55,11 @@ export class CartController {
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiConflictResponse({ description: 'Item already exists in cart' })
-  async addItem(@Body() item: ItemRequestDto) {
+  async addItem(
+    @Body() item: ItemRequestDto,
+    @Cookies('access_token') token: string
+  ) {
+    item.cartId = await this.cart.getCartIdFromToken(token);
     return this.cart.addItem(item);
   }
 
@@ -74,7 +71,12 @@ export class CartController {
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiNotFoundResponse({ description: 'Cart item not found' })
-  async editItem(@Param('id') id: string, @Body() item: ItemRequestDto) {
+  async editItem(
+    @Param('id') id: string,
+    @Body() item: ItemRequestDto,
+    @Cookies('access_token') token: string
+  ) {
+    item.cartId = await this.cart.getCartIdFromToken(token);
     return this.cart.editItem({
       id,
       ...item,
@@ -86,9 +88,17 @@ export class CartController {
   @ApiOperation({ summary: 'Delete item from cart' })
   @ApiOkResponse({ description: 'Item deleted successfully' })
   @ApiNotFoundResponse({ description: 'Cart item not found' })
-  async deleteItem(@Param('id') id: string) {
+  async deleteItem(
+    @Param('id') id: string,
+    @Cookies('access_token') token: string
+  ) {
+    const cartId = await this.cart.getCartIdFromToken(token);
+    if (!cartId) {
+      throw new Error('No cart provided');
+    }
     return this.cart.deleteItem({
       id,
+      cartId,
     });
   }
 }

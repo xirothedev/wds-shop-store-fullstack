@@ -1,16 +1,24 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
-import { getAllCartItem } from '@/lib/api/cart.api';
+import { deleteCartItem, getAllCartItem } from '@/lib/api/cart.api';
 import { CartItem } from '@/types/product';
 
 import { CartItemCard } from './CartItemCard';
 
 export function CartItemList() {
-  const { data, isLoading, error } = useQuery<CartItem[], Error>({
-    queryKey: ['get-all'],
+  const query = useQuery<CartItem[], Error>({
+    queryKey: ['cart', 'items'],
     queryFn: getAllCartItem,
+  });
+
+  const deleteItem = useMutation<void, AxiosError, string>({
+    mutationFn: deleteCartItem,
+    onSuccess: () => {
+      query.refetch();
+    },
   });
 
   const handlePayment = () => {
@@ -19,7 +27,7 @@ export function CartItemList() {
 
   return (
     <>
-      {isLoading && (
+      {(query.isLoading || deleteItem.isPending) && (
         <div className="relative h-[300px] w-full">
           <svg
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white"
@@ -33,13 +41,13 @@ export function CartItemList() {
           </svg>
         </div>
       )}
-      {error && <p>{error.message}</p>}
-      {data && (
+      {query.error && <p>{query.error.message}</p>}
+      {query.data && !query.isLoading && !deleteItem.isPending && (
         <form
           className="flex w-full flex-col items-center gap-4"
           onSubmit={handlePayment}
         >
-          <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_20%_5%] md:pb-8">
+          <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
             <div className="flex justify-center">
               <label htmlFor="select" className="group cursor-pointer">
                 <input type="checkbox" id="select" className="peer sr-only" />
@@ -55,9 +63,18 @@ export function CartItemList() {
             <div className="hidden md:block">Thao tác</div>
           </div>
           <div className="flex w-full max-w-7xl flex-col gap-4">
-            {data.map((product: CartItem) => (
-              <CartItemCard key={product.cartItemId} {...product} />
+            {query.data.map((product: CartItem) => (
+              <CartItemCard
+                key={product.cartItemId}
+                product={product}
+                deleteItem={deleteItem.mutate}
+              />
             ))}
+            {query.data.length === 0 && (
+              <div className="grid h-[200px] items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
+                <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+              </div>
+            )}
           </div>
           <button type="submit">Thanh Toán</button>
         </form>

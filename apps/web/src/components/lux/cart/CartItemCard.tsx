@@ -1,5 +1,7 @@
 'use client';
 
+import { UseMutateFunction } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import Image from 'next/image';
 import { useState } from 'react';
 import { FaMinus } from 'react-icons/fa';
@@ -7,11 +9,21 @@ import { FaPlus } from 'react-icons/fa6';
 
 import { type CartItem } from '@/types/product';
 
-export function CartItemCard(product: CartItem) {
+export interface CardInputProps {
+  product: CartItem;
+  deleteItem: UseMutateFunction<
+    void,
+    AxiosError<unknown, any>,
+    string,
+    unknown
+  >;
+}
+
+export function CartItemCard({ product, deleteItem }: CardInputProps) {
   const [quantity, setQuantity] = useState(product.quantity);
 
   return (
-    <div className="grid-row-[10%_10%_80%] md:grid-row-1 grid w-full grid-cols-[10%_30%_30%_30%] items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_20%_5%]">
+    <div className="grid w-full grid-cols-[10%_30%_40%_20%] grid-rows-[50%_20%_30%] items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:grid-rows-1">
       <div className="row-span-3 flex justify-center md:col-span-1 md:row-span-1">
         <label
           htmlFor={`select-${product.id + product.size}`}
@@ -38,14 +50,14 @@ export function CartItemCard(product: CartItem) {
         />
       </div>
 
-      <div className="product-info-wrapper col-span-2 ml-0 ml-2 text-left md:col-span-1">
+      <div className="product-info-wrapper col-span-2 ml-2 flex h-full w-full flex-col text-left md:col-span-1 md:justify-center">
         <a className="block truncate" href={`/products/${product.slug}`}>
           {product.name}
         </a>
         <p className="">Size: {product.size}</p>
       </div>
 
-      <div className="price-wrapper ml-2 text-left md:ml-0 md:text-center">
+      <div className="price-wrapper row-span-2 ml-2 flex h-full w-full flex-col justify-end text-left md:row-span-1 md:ml-0 md:justify-center md:text-center">
         <p className="text-left md:text-center">
           {Math.round(product.priceCurrent) &&
             new Intl.NumberFormat('vi-VN', {
@@ -57,7 +69,7 @@ export function CartItemCard(product: CartItem) {
       </div>
 
       <div className="quantity-wrapper flex flex-row justify-center text-right md:text-center">
-        <div className="quantity-box my-auto ml-auto flex w-16 flex-row items-center justify-around border border-white/10 md:mr-auto">
+        <div className="quantity-box my-auto ml-auto flex w-16 flex-row items-center justify-around rounded-xl border border-white/10 md:mr-auto">
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(0, q - 1))}
@@ -78,7 +90,7 @@ export function CartItemCard(product: CartItem) {
         </div>
       </div>
 
-      <div className="price-wrapper ml-2 text-left md:ml-0 md:text-center">
+      <div className="price-wrapper ml-2 hidden text-left align-text-bottom md:ml-0 md:block md:text-center">
         <p className="text-left md:text-center">
           {Math.round(product.priceCurrent * quantity) &&
             new Intl.NumberFormat('vi-VN', {
@@ -92,7 +104,9 @@ export function CartItemCard(product: CartItem) {
       <div className="delete-button-wrapper">
         <button
           type="button"
-          className="w-full cursor-pointer text-right hover:text-amber-500 md:text-center"
+          onClick={() => deleteItem(product.cartItemId)}
+          disabled={product.cartItemId === undefined}
+          className="w-full cursor-pointer text-right hover:text-amber-500 disabled:opacity-50 md:text-center"
         >
           Xóa
         </button>

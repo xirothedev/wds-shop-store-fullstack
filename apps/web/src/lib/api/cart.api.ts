@@ -18,3 +18,8 @@ export const getAllCartItem = async (): Promise<CartItem[]> => {
     ],
   }));
 };
+
+export const deleteCartItem = async (itemId: string): Promise<void> => {
+  console.log(itemId);
+  await apiClient.delete(`/cart/items/${itemId}`);
+};
