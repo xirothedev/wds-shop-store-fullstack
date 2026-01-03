@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   CartItemEditRequestDto,
@@ -15,7 +15,10 @@ import { CartItem } from '@/types/product';
 import { CartItemCard } from './CartItemCard';
 
 export function CartItemList() {
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Map<string, number>>(
+    new Map()
+  );
+  const [totalAmount, setTotalAmount] = useState<number>(0);
 
   const query = useQuery<CartItem[], Error>({
     queryKey: ['cart', 'items'],
@@ -33,16 +36,26 @@ export function CartItemList() {
     mutationFn: updateCartItem,
     onSuccess: async () => {
       await query.refetch();
+      console.log(query.isFetching);
     },
   });
 
-  const handleSelectItem = (itemId: string) => {
+  useEffect(() => {
+    setTotalAmount(
+      [...selectedItems].reduce<number>((sum, [_, amount]) => {
+        return sum + amount;
+      }, 0)
+    );
+  }, [selectedItems]);
+
+  const handleSelectItem = (itemId: string, amount: number) => {
+    console.log(1);
     setSelectedItems((prev) => {
-      const newSet = new Set(prev);
+      const newSet = new Map(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
       } else {
-        newSet.add(itemId);
+        newSet.set(itemId, amount);
       }
       return newSet;
     });
@@ -50,7 +63,7 @@ export function CartItemList() {
 
   const deleteSelectedItem = (itemId: string) => {
     setSelectedItems((prev) => {
-      const newSet = new Set(prev);
+      const newSet = new Map(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
       }
@@ -58,10 +71,21 @@ export function CartItemList() {
     });
   };
 
+  useEffect(() => {
+    console.log(totalAmount);
+  }, [totalAmount]);
+
   const handleSelectAll = (checked: boolean) => {
     if (query.data) {
       setSelectedItems(
-        checked ? new Set(query.data.map((item) => item.cartItemId)) : new Set()
+        checked
+          ? new Map(
+              query.data.map((item) => [
+                item.cartItemId,
+                item.priceCurrent * item.quantity,
+              ])
+            )
+          : new Map()
       );
     }
   };
@@ -82,7 +106,7 @@ export function CartItemList() {
 
   return (
     <>
-      {(query.isLoading || deleteItem.isPending || editItem.isPending) && (
+      {query.isLoading && (
         <div className="relative h-75 w-full">
           <svg
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white"
@@ -97,63 +121,76 @@ export function CartItemList() {
         </div>
       )}
       {query.error && <p>{query.error.message}</p>}
-      {query.data &&
-        !query.isLoading &&
-        !deleteItem.isPending &&
-        !editItem.isPending && (
-          <form
-            className="flex w-full flex-col items-center gap-4"
-            onSubmit={handlePayment}
-          >
-            <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
-              <div className="flex justify-center">
-                <label htmlFor="select-all" className="group cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id="select-all"
-                    className="peer sr-only"
-                    checked={allSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = isIndeterminate;
-                    }}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                  <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
-                    <p className="m-auto text-center select-none">✓</p>
-                  </div>
-                </label>
-              </div>
-              <div className="col-span-3 md:col-span-2">Sản phẩm</div>
-              <div className="hidden md:block">Đơn giá</div>
-              <div className="hidden md:block">Số lượng</div>
-              <div className="hidden md:block">Thành tiền</div>
-              <div className="hidden md:block">Thao tác</div>
-            </div>
-            <div className="flex w-full max-w-7xl flex-col gap-4">
-              {query.data.map((product: CartItem) => (
-                <CartItemCard
-                  key={product.cartItemId}
-                  product={product}
-                  deleteItem={deleteItem.mutate}
-                  editItem={editItem.mutate}
-                  isSelected={selectedItems.has(product.cartItemId)}
-                  onSelect={() => handleSelectItem(product.cartItemId)}
-                  deleteSelectedItem={() =>
-                    deleteSelectedItem(product.cartItemId)
-                  }
+      {query.data && !query.isLoading && (
+        <form
+          className="flex w-full flex-col items-center gap-4"
+          onSubmit={handlePayment}
+        >
+          <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center font-medium md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
+            <div className="flex justify-center">
+              <label htmlFor="select-all" className="group cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  className="peer sr-only"
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = isIndeterminate;
+                  }}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
                 />
-              ))}
-              {query.data.length === 0 && (
-                <div className="grid h-50 items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
-                  <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+                <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
+                  <p className="m-auto text-center select-none">✓</p>
                 </div>
-              )}
+              </label>
             </div>
-            <button type="submit" disabled={selectedItems.size === 0}>
-              Thanh Toán ({selectedItems.size})
+            <div className="col-span-3 md:col-span-2">Sản phẩm</div>
+            <div className="hidden md:block">Đơn giá</div>
+            <div className="hidden md:block">Số lượng</div>
+            <div className="hidden md:block">Thành tiền</div>
+            <div className="hidden md:block">Thao tác</div>
+          </div>
+          <div className="flex w-full max-w-7xl flex-col gap-4">
+            {query.data.map((product: CartItem) => (
+              <CartItemCard
+                key={product.cartItemId}
+                product={product}
+                deleteItem={deleteItem.mutate}
+                editItem={editItem.mutate}
+                isSelected={selectedItems.has(product.cartItemId)}
+                onSelect={handleSelectItem}
+                deleteSelectedItem={deleteSelectedItem}
+                isUpdating={query.isFetching}
+              />
+            ))}
+            {query.data.length === 0 && (
+              <div className="grid h-50 items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
+                <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+              </div>
+            )}
+          </div>
+          <div className="flex w-full flex-row justify-between px-2 text-2xl">
+            <p>Tổng thanh toán:</p>
+            <p>
+              {Math.round(totalAmount) &&
+                new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+                  maximumFractionDigits: 0,
+                }).format(Math.round(totalAmount))}
+            </p>
+          </div>
+          <div className="flex w-full justify-end">
+            <button
+              type="submit"
+              disabled={selectedItems.size === 0}
+              className="rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl"
+            >
+              Thanh Toán
             </button>
-          </form>
-        )}
+          </div>
+        </form>
+      )}
     </>
   );
 }

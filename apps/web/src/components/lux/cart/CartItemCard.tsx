@@ -4,8 +4,7 @@ import { UseMutateFunction } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { FaMinus } from 'react-icons/fa';
-import { FaPlus } from 'react-icons/fa6';
+import { FaMinus, FaPlus } from 'react-icons/fa';
 import { useDebounce } from 'react-use';
 
 import { CartItemEditRequestDto } from '@/lib/api/cart.api';
@@ -25,8 +24,9 @@ export interface CardInputProps {
     CartItemEditRequestDto
   >;
   isSelected: boolean;
-  onSelect: () => void;
-  deleteSelectedItem: () => void;
+  onSelect: (id: string, amount: number) => void;
+  deleteSelectedItem: (id: string, amount: number) => void;
+  isUpdating: boolean;
 }
 
 export function CartItemCard({
@@ -36,6 +36,7 @@ export function CartItemCard({
   isSelected,
   onSelect,
   deleteSelectedItem,
+  isUpdating,
 }: CardInputProps) {
   const [quantity, setQuantity] = useState(product.quantity);
   const [pendingQuantity, setPendingQuantity] = useState<number | null>(null);
@@ -44,7 +45,7 @@ export function CartItemCard({
     async () => {
       if (quantity === 0) {
         deleteItem(product.cartItemId);
-        deleteSelectedItem();
+        deleteSelectedItem(product.cartItemId, quantity * product.priceCurrent);
       } else if (
         quantity !== product.quantity &&
         pendingQuantity === quantity
@@ -55,8 +56,9 @@ export function CartItemCard({
           quantity: quantity,
           size: product.size,
         };
-        await editItem(obj);
-        setPendingQuantity(null);
+        editItem(obj);
+        onSelect(product.cartItemId, 0);
+        onSelect(product.cartItemId, quantity * product.priceCurrent);
       }
     },
     300,
@@ -80,7 +82,9 @@ export function CartItemCard({
             id={`select-${product.id + product.size}`}
             className="peer sr-only"
             checked={isSelected}
-            onChange={onSelect}
+            onChange={() =>
+              onSelect(product.cartItemId, quantity * product.priceCurrent)
+            }
           />
           <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
             <p className="m-auto text-center select-none">✓</p>
@@ -125,7 +129,8 @@ export function CartItemCard({
               setQuantity(Math.max(0, newQty));
               setPendingQuantity(Math.max(0, newQty));
             }}
-            className="h-8 w-8 cursor-pointer select-none"
+            disabled={isUpdating}
+            className="h-8 w-8 cursor-pointer select-none disabled:opacity-50"
           >
             <FaMinus className="m-auto h-2 w-2" />
           </button>
@@ -139,7 +144,8 @@ export function CartItemCard({
               setPendingQuantity(Math.min(newQty, product.stock));
             }}
             type="button"
-            className="h-8 w-8 cursor-pointer select-none"
+            className="h-8 w-8 cursor-pointer select-none disabled:opacity-50"
+            disabled={isUpdating}
           >
             <FaPlus className="m-auto h-2 w-2" />
           </button>
@@ -162,9 +168,12 @@ export function CartItemCard({
           type="button"
           onClick={() => {
             deleteItem(product.cartItemId);
-            deleteSelectedItem();
+            deleteSelectedItem(
+              product.cartItemId,
+              quantity * product.priceCurrent
+            );
           }}
-          disabled={product.cartItemId === undefined}
+          disabled={product.cartItemId === undefined || isUpdating}
           className="w-full cursor-pointer text-right hover:text-red-500 disabled:opacity-50 md:text-center"
         >
           Xóa
