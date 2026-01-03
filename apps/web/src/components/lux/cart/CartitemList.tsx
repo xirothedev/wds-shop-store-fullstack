@@ -2,13 +2,21 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import { useMemo, useState } from 'react';
 
-import { deleteCartItem, getAllCartItem } from '@/lib/api/cart.api';
+import {
+  CartItemEditRequestDto,
+  deleteCartItem,
+  getAllCartItem,
+  updateCartItem,
+} from '@/lib/api/cart.api';
 import { CartItem } from '@/types/product';
 
 import { CartItemCard } from './CartItemCard';
 
 export function CartItemList() {
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
   const query = useQuery<CartItem[], Error>({
     queryKey: ['cart', 'items'],
     queryFn: getAllCartItem,
@@ -16,19 +24,66 @@ export function CartItemList() {
 
   const deleteItem = useMutation<void, AxiosError, string>({
     mutationFn: deleteCartItem,
-    onSuccess: () => {
-      query.refetch();
+    onSuccess: async () => {
+      await query.refetch();
     },
   });
 
+  const editItem = useMutation<void, AxiosError, CartItemEditRequestDto>({
+    mutationFn: updateCartItem,
+    onSuccess: async () => {
+      await query.refetch();
+    },
+  });
+
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const deleteSelectedItem = (itemId: string) => {
+    setSelectedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (query.data) {
+      setSelectedItems(
+        checked ? new Set(query.data.map((item) => item.cartItemId)) : new Set()
+      );
+    }
+  };
+
+  const allSelected = useMemo(() => {
+    if (!query.data || query.data.length === 0) return false;
+    return query.data.every((item) => selectedItems.has(item.cartItemId));
+  }, [query.data, selectedItems]);
+
+  const isIndeterminate = useMemo(() => {
+    if (!query.data || query.data.length === 0) return false;
+    return selectedItems.size > 0 && selectedItems.size < query.data.length;
+  }, [query.data, selectedItems]);
+
   const handlePayment = () => {
-    console.log('PAYMENT');
+    console.log('PAYMENT', Array.from(selectedItems));
   };
 
   return (
     <>
-      {(query.isLoading || deleteItem.isPending) && (
-        <div className="relative h-[300px] w-full">
+      {(query.isLoading || deleteItem.isPending || editItem.isPending) && (
+        <div className="relative h-75 w-full">
           <svg
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white"
             fill="#ffffff"
@@ -42,43 +97,63 @@ export function CartItemList() {
         </div>
       )}
       {query.error && <p>{query.error.message}</p>}
-      {query.data && !query.isLoading && !deleteItem.isPending && (
-        <form
-          className="flex w-full flex-col items-center gap-4"
-          onSubmit={handlePayment}
-        >
-          <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
-            <div className="flex justify-center">
-              <label htmlFor="select" className="group cursor-pointer">
-                <input type="checkbox" id="select" className="peer sr-only" />
-                <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
-                  <p className="m-auto text-center select-none">✓</p>
-                </div>
-              </label>
-            </div>
-            <div className="col-span-3 md:col-span-2">Sản phẩm</div>
-            <div className="hidden md:block">Đơn giá</div>
-            <div className="hidden md:block">Số lượng</div>
-            <div className="hidden md:block">Thành tiền</div>
-            <div className="hidden md:block">Thao tác</div>
-          </div>
-          <div className="flex w-full max-w-7xl flex-col gap-4">
-            {query.data.map((product: CartItem) => (
-              <CartItemCard
-                key={product.cartItemId}
-                product={product}
-                deleteItem={deleteItem.mutate}
-              />
-            ))}
-            {query.data.length === 0 && (
-              <div className="grid h-[200px] items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
-                <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+      {query.data &&
+        !query.isLoading &&
+        !deleteItem.isPending &&
+        !editItem.isPending && (
+          <form
+            className="flex w-full flex-col items-center gap-4"
+            onSubmit={handlePayment}
+          >
+            <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
+              <div className="flex justify-center">
+                <label htmlFor="select-all" className="group cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="select-all"
+                    className="peer sr-only"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = isIndeterminate;
+                    }}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
+                  <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
+                    <p className="m-auto text-center select-none">✓</p>
+                  </div>
+                </label>
               </div>
-            )}
-          </div>
-          <button type="submit">Thanh Toán</button>
-        </form>
-      )}
+              <div className="col-span-3 md:col-span-2">Sản phẩm</div>
+              <div className="hidden md:block">Đơn giá</div>
+              <div className="hidden md:block">Số lượng</div>
+              <div className="hidden md:block">Thành tiền</div>
+              <div className="hidden md:block">Thao tác</div>
+            </div>
+            <div className="flex w-full max-w-7xl flex-col gap-4">
+              {query.data.map((product: CartItem) => (
+                <CartItemCard
+                  key={product.cartItemId}
+                  product={product}
+                  deleteItem={deleteItem.mutate}
+                  editItem={editItem.mutate}
+                  isSelected={selectedItems.has(product.cartItemId)}
+                  onSelect={() => handleSelectItem(product.cartItemId)}
+                  deleteSelectedItem={() =>
+                    deleteSelectedItem(product.cartItemId)
+                  }
+                />
+              ))}
+              {query.data.length === 0 && (
+                <div className="grid h-50 items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
+                  <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+                </div>
+              )}
+            </div>
+            <button type="submit" disabled={selectedItems.size === 0}>
+              Thanh Toán ({selectedItems.size})
+            </button>
+          </form>
+        )}
     </>
   );
 }

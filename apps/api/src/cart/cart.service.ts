@@ -89,6 +89,12 @@ export class CartService {
           },
         },
       },
+
+      orderBy: {
+        product: {
+          name: 'asc',
+        },
+      },
     });
 
     return data.map((item) => ({
