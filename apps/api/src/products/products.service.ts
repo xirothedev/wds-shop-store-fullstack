@@ -66,7 +66,8 @@ export class ProductsService {
             gender,
             isPublished,
             sizeStocks,
-            images
+            images,
+            category
         } = createProductDto;
 
         const slug = await this.generateUniqueSlug(name);
@@ -84,7 +85,8 @@ export class ProductsService {
             badge,
             gender,
             isPublished,
-            images
+            images,
+            category
         };
 
         if (sizeStocks && Array.isArray(sizeStocks) && sizeStocks.length > 0) {
@@ -317,7 +319,6 @@ export class ProductsService {
 
         return products.map(product => product.name);
     }
-
     async findOne(id: string) {
         const product = await this.prisma.product.findUnique({ where: { id } });
         if (!product) {
@@ -325,6 +326,52 @@ export class ProductsService {
         }
         // Transform images with CDN prefix
         return this.transformProductImages(product);
+    }
+    async findOneBySlug(slug: string) {
+        const product = await this.prisma.product.findUnique({
+            where: { slug },
+            include: { sizeStocks: true }
+        });
+        if (!product) {
+            throw new NotFoundException('Product not found (VERIFY_UPDATE)');
+        }
+        // Transform images with CDN prefix
+        return this.transformProductImages(product);
+    }
+    async getRelatedProducts(slug: string) {
+        const currentProduct = await this.prisma.product.findUnique({
+            where: { slug: slug },
+            select: {
+                id: true,
+                gender: true,
+                priceCurrent: true,
+                category: true
+            }
+        });
+
+        if (!currentProduct) return [];
+
+        const whereClause: any = {
+            gender: currentProduct.gender,
+            id: { not: currentProduct.id },
+            isPublished: true
+        };
+
+        // Only filter by category if it exists
+        if (currentProduct.category) {
+            whereClause.category = currentProduct.category;
+        }
+
+        const related = await this.prisma.product.findMany({
+            where: whereClause,
+            take: 4,
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        // Transform images with CDN prefix
+        return related.map(product => this.transformProductImages(product));
     }
 
     async update(id: string, updateProductDto: UpdateProductDto) {
@@ -340,7 +387,8 @@ export class ProductsService {
             gender,
             isPublished,
             sizeStocks,
-            images
+            images,
+            category
         } = updateProductDto;
 
         const data: any = {
@@ -354,7 +402,8 @@ export class ProductsService {
             badge,
             gender,
             isPublished,
-            images
+            images,
+            category
         };
 
         if (name && name !== product.name) {

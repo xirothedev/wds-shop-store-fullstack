@@ -40,6 +40,7 @@ export function RelatedProductsSection({
                 currency: 'VND',
                 maximumFractionDigits: 0,
               }).format(product.priceCurrent)}
+              img={product.images?.[0]?.src}
               badge={
                 product.badge
                   ? {

@@ -9,12 +9,13 @@ export function ProductCard({
   subtitle,
   priceLabel,
   badge,
+  img,
 }: ProductCardProps) {
   return (
     <div className="group min-w-[320px] shrink-0 cursor-pointer snap-center rounded-3xl border border-amber-500/20 bg-white/5 p-6 backdrop-blur-xl transition-transform duration-500 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(251,191,36,0.25)] md:min-w-[400px]">
       <div className="relative mb-6 flex h-64 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-white/5 to-white/10">
         <span className="text-6xl transition-transform duration-500 group-hover:scale-110">
-          {icon}
+        {img ? <img src={img} alt={title} className="w-full h-full object-cover" /> : icon}
         </span>
         {badge ? (
           <div
@@ -42,7 +43,7 @@ export function ProductCard({
         <span className="text-2xl font-bold text-amber-500">{priceLabel}</span>
         <Button variant="ghost">
           <span className="sr-only">Thêm vào giỏ</span>
-          <svg
+          <svg    
             xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"

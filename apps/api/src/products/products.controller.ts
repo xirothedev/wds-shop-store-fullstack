@@ -146,7 +146,24 @@ export class ProductsController {
             isSale
         );
     }
-
+    //get product by slug
+    @Public()
+    @Get('slug/:slug')
+    @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
+    findOneBySlug(@Param('slug') slug: string) {
+        return this.productsService.findOneBySlug(slug);
+    }
+    //get related products
+    @Public()
+    @Get('related/:slug')
+    @ApiResponse({
+        status: 200,
+        description: 'Get related products',
+        type: [ProductDto]
+    })
+    getRelatedProducts(@Param('slug') slug: string) {
+        return this.productsService.getRelatedProducts(slug);
+    }
     //get product by id
     @Public()
     @Get(':id')

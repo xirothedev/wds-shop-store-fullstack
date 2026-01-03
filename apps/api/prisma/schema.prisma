@@ -229,6 +229,9 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Product category
+  category String? @db.VarChar(255) // Product category
+
   // Relations
   sizeStocks ProductSizeStock[] // Manage stock by size (only t-shirt)
   cartItems  CartItem[]

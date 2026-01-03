@@ -29,6 +29,19 @@ export const getProducts = async (
     }
   );
 
-  // Extract data from response wrapper
+
   return response.data.data;
 };
+
+export const getProductBySlug = async (slug: string): Promise<Product | undefined> => {
+  const response = await apiClient.get<ApiResponse<Product>>(
+    `/api/products/slug/${slug}`
+  );
+  return response.data.data;
+} 
+export const getRelatedProducts = async (slug: string): Promise<Product[]> => {
+  const response = await apiClient.get<ApiResponse<Product[]>>(
+    `/api/products/related/${slug}`
+  );
+  return response.data.data;
+}

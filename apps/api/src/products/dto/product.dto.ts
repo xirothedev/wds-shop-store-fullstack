@@ -60,4 +60,11 @@ export class ProductDto {
 
   @ApiProperty({ example: '2025-12-31T00:00:00.000Z' })
   updatedAt: string;
+
+  @ApiProperty({
+    example: 'Sneakers',
+    description: 'Product category',
+    required: false,
+  })
+  category?: string;
 }
