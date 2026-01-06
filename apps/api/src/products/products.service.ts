@@ -329,8 +329,7 @@ export class ProductsService {
     }
     async findOneBySlug(slug: string) {
         const product = await this.prisma.product.findUnique({
-            where: { slug },
-            include: { sizeStocks: true }
+            where: { slug }
         });
         if (!product) {
             throw new NotFoundException('Product not found (VERIFY_UPDATE)');
