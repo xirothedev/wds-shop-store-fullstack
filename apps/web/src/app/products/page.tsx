@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { navLinks } from '@/components/lux/data';
@@ -20,6 +21,8 @@ function ProductsContent() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Get filters from URL params
   const gender = searchParams.get('gender') as
@@ -28,14 +31,16 @@ function ProductsContent() {
     | 'UNISEX'
     | null;
   const sale = searchParams.get('sale') === 'true';
+  const search = searchParams.get("search");
 
   // Memoize filters to prevent infinite loops
   const filters = useMemo(
     () => ({
       ...(gender && { gender }),
       ...(sale && { sale: true }),
+      ...(search && {search})
     }),
-    [gender, sale]
+    [gender, sale,search]
   );
 
   const loadMoreProducts = useCallback(async () => {
@@ -100,7 +105,45 @@ function ProductsContent() {
   return (
     <>
       <LuxNavbar links={navLinks} cartCount={3} />
-
+      {(products.length === 0) ? (
+        
+        
+          isLoading?(
+            <ProductsLoading/>
+          ): (
+              <div className="w-full h-screen flex items-center justify-center">
+              <div className="mx-auto max-w-xl rounded-lg border border-amber-200/40 bg-white/5 p-8 text-center">
+                <svg
+                  className="mx-auto mb-4 h-12 w-12 text-amber-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h18M5 7v11a2 2 0 002 2h10a2 2 0 002-2V7M9 7V4a3 3 0 016 0v3" />
+                </svg>
+                <h3 className="mb-2 text-lg font-semibold text-white">Không có sản phẩm nào</h3>
+                <p className="text-sm text-gray-400">Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</p>
+                <div className="mt-4 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams(Array.from(searchParams.entries()));
+                      params.delete('search');
+                      const q = params.toString();
+                      router.push(q ? `${pathname}?${q}` : pathname);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
+                  >
+                    Xóa bộ lọc
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+      ) :
+        (
+          
       <main className="min-h-screen pt-24">
         <div className="mx-auto max-w-7xl px-6 pb-16">
           {/* Header */}
@@ -158,14 +201,13 @@ function ProductsContent() {
             </div>
           </InfiniteScroll>
 
-          {/* Empty state */}
-          {!isLoading && products.length === 0 && (
-            <div className="py-16 text-center">
-              <p className="text-gray-400">Không có sản phẩm nào.</p>
-            </div>
-          )}
+       
         </div>
       </main>
+        )
+      }
+     
+
     </>
   );
 }

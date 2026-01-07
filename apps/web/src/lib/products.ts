@@ -611,12 +611,14 @@ export async function getAllProducts(
   filters?: {
     gender?: 'MALE' | 'FEMALE' | 'UNISEX';
     sale?: boolean;
+    search?: string;
   }
 ): Promise<{ products: Product[]; hasMore: boolean }> {
   try {
     const MOCK_PRODUCTS = await getProducts(
       filters?.gender,
-      filters?.sale ? 'true' : 'false'
+      filters?.sale ? 'true' : 'false',
+      filters?.search,
     );
 
     // Ensure we have an array

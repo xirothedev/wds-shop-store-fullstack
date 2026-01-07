@@ -11,7 +11,8 @@ interface ApiResponse<T> {
 
 export const getProducts = async (
   gender?: string,
-  isSale?: string
+  isSale?: string,
+  search?:string
 ): Promise<Product[]> => {
   const params: Record<string, string> = {};
 
@@ -20,6 +21,9 @@ export const getProducts = async (
   }
   if (isSale !== undefined) {
     params.isSale = isSale;
+  }
+  if (search) {
+    params.search = search
   }
 
   const response = await apiClient.get<ApiResponse<Product[]>>(

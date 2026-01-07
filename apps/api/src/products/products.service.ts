@@ -156,113 +156,105 @@ export class ProductsService {
         gender?: string,
         isSale?: string
     ) {
-        // Strip quotes from query parameters
+        // 1. Clean inputs
         const cleanQuery = query
             ? query.replace(/^['"]|['"]$/g, '').trim()
             : '';
         const cleanGender = gender
             ? gender.replace(/^['"]|['"]$/g, '').trim()
             : undefined;
+        const isSaleValue =
+            (isSale
+                ? isSale
+                      .replace(/^['"]|['"]$/g, '')
+                      .trim()
+                      .toLowerCase()
+                : '') === 'true';
 
-        const searchTerm = cleanQuery;
-        const genderFilter =
+        const genderFilter: 'MALE' | 'FEMALE' | 'UNISEX' | null =
             cleanGender &&
             ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
-                ? cleanGender.toUpperCase()
+                ? (cleanGender.toUpperCase() as 'MALE' | 'FEMALE' | 'UNISEX')
                 : null;
 
-        // Filter by sale status
-        const isSaleValue = isSale
-            ? isSale
-                  .replace(/^['"]|['"]$/g, '')
-                  .trim()
-                  .toLowerCase()
-            : 'false';
+        // If no search query, return filtered products
+        if (!cleanQuery) {
+            const where: any = { isPublished: true };
+            if (genderFilter) where.gender = genderFilter;
+            if (isSaleValue) where.priceDiscount = { not: null };
 
-        if (!searchTerm) {
-            const where: any = {};
-            if (genderFilter) {
-                where.gender = genderFilter;
-            }
-            if (isSaleValue === 'true') {
-                where.priceDiscount = {
-                    not: null
-                };
-            }
-            return this.prisma.product.findMany({ where });
+            const products = await this.prisma.product.findMany({
+                where,
+                include: { sizeStocks: true }
+            });
+            return products.map(p => this.transformProductImages(p));
         }
 
-        // Using raw SQL for PostgreSQL full-text search with ranking
-        // Using 'simple' config for Vietnamese (works without dictionary)
-        const products = await this.prisma.$queryRaw<
-            Array<{
-                id: string;
-                slug: string;
-                name: string;
-                description: string;
-                priceCurrent: number;
-                images: string[];
-                relevance: number;
-            }>
-        >`
+        // 2. Build flexible OR search term ("word1 | word2")
+        const formattedSearchTerm = cleanQuery
+            .split(/\s+/)
+            .filter(word => word.length > 0)
+            .join(' | ');
+
+        // 3. Query PostgreSQL full-text search (focus on `name` column)
+        const products = await this.prisma.$queryRaw<any[]>`
       SELECT 
-        id,
-        slug,
-        name,
-        description,
-        "priceCurrent"::numeric,
-        images,
+        id, 
         ts_rank(
-          to_tsvector('simple', name || ' ' || description),
-          plainto_tsquery('simple', ${searchTerm})
+          to_tsvector('simple', name),
+          to_tsquery('simple', ${formattedSearchTerm})
         )::numeric as relevance
       FROM products
-      WHERE 
-        "isPublished" = true
-        AND (
-          to_tsvector('simple', name || ' ' || description) @@ plainto_tsquery('simple', ${searchTerm})
-        )
+      WHERE "isPublished" = true
+        AND to_tsvector('simple', name) @@ to_tsquery('simple', ${formattedSearchTerm})
       ORDER BY relevance DESC, "createdAt" DESC
       LIMIT 50
     `;
 
-        // Fetch full product data with relations
-        // Apply gender and isSale filter in Prisma query for safety
-        const productIds = products.map(p => p.id);
-        const whereClause: any = {
-            id: {
-                in: productIds
+        let productIds = products.map(p => p.id);
+
+        // 4. Fallback: if exactly one product matched, fetch more from same category
+        if (productIds.length === 1) {
+            const mainProductId = productIds[0];
+            const mainProduct = await this.prisma.product.findUnique({
+                where: { id: mainProductId },
+                select: { category: true }
+            });
+
+            if (mainProduct?.category) {
+                const relatedProducts = await this.prisma.product.findMany({
+                    where: {
+                        category: mainProduct.category,
+                        id: { not: mainProductId },
+                        isPublished: true,
+                        gender: genderFilter || undefined,
+                        priceDiscount: isSaleValue ? { not: null } : undefined
+                    },
+                    select: { id: true },
+                    take: 12,
+                    orderBy: { createdAt: 'desc' }
+                });
+
+                productIds = [...productIds, ...relatedProducts.map(p => p.id)];
             }
-        };
-
-        if (genderFilter) {
-            whereClause.gender = genderFilter;
         }
 
-        if (isSaleValue === 'true') {
-            whereClause.priceDiscount = {
-                not: null
-            };
-        }
+        // 5. Fetch full product data and apply final filters
+        const whereClause: any = { id: { in: productIds }, isPublished: true };
+        if (genderFilter) whereClause.gender = genderFilter;
+        if (isSaleValue) whereClause.priceDiscount = { not: null };
 
         const fullProducts = await this.prisma.product.findMany({
             where: whereClause,
-            include: {
-                sizeStocks: true
-            }
+            include: { sizeStocks: true }
         });
 
-        // Sort by relevance order
-        const sortedProducts = productIds.map(id =>
-            fullProducts.find(p => p.id === id)
-        );
+        // Preserve order by productIds (relevance)
+        const sortedResults = productIds
+            .map(id => fullProducts.find(p => p.id === id))
+            .filter((p): p is NonNullable<typeof p> => !!p);
 
-        const filteredProducts = sortedProducts.filter(
-            (p): p is NonNullable<typeof p> => p !== null && p !== undefined
-        );
-
-        // Transform images with CDN prefix
-        return filteredProducts.map(product =>
+        return sortedResults.map(product =>
             this.transformProductImages(product)
         );
     }
@@ -339,7 +331,7 @@ export class ProductsService {
     }
     async getRelatedProducts(slug: string) {
         const currentProduct = await this.prisma.product.findUnique({
-            where: { slug: slug },
+            where: { slug },
             select: {
                 id: true,
                 gender: true,
