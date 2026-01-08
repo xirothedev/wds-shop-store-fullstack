@@ -82,7 +82,9 @@ const isSale = searchParams.get('sale');
     const params = new URLSearchParams();
     searchParams?.forEach((value, key) => params.set(key, value));
     params.set('search', trimmed);
-    return params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    // Always navigate to the products listing when performing a search
+    const base = '/products';
+    return params.toString() ? `${base}?${params.toString()}` : base;
   };
 
   return (

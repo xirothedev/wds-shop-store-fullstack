@@ -150,7 +150,7 @@ function ProductsContent() {
           {/* Header */}
           <div className="mb-12 text-center">
             <h1 className="mb-4 text-5xl font-bold">
-              {gender === 'MALE'
+             {filters.search ? `Kết quả tìm kiếm ` : gender === 'MALE'
                 ? 'GIÀY NAM'
                 : gender === 'FEMALE'
                   ? 'GIÀY NỮ'
@@ -158,7 +158,7 @@ function ProductsContent() {
                     ? 'SẢN PHẨM GIẢM GIÁ'
                     : 'TẤT CẢ'}{' '}
               <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
-                SẢN PHẨM
+                {filters.search ? `` : ' SẢN PHẨM'}
               </span>
             </h1>
             <p className="text-gray-400">

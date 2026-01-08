@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 
 import { featuredProducts, navLinks, statsItems } from '@/components/lux/data';
@@ -8,6 +9,7 @@ import { ProductSliderSection } from '@/components/lux/ProductSliderSection';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
 import { StatsBar } from '@/components/lux/StatsBar';
 
+import { redirect } from 'next/navigation';
 export const metadata: Metadata = {
   title: 'Trang chủ',
   description:
@@ -21,7 +23,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default function Home({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }  }) {
+  const search = searchParams.search;
+  if (search) {
+    const value = Array.isArray(search) ? search[0] : search;
+    const encoded = encodeURIComponent(value);
+    redirect(`/products?search=${encoded}`);
+  }
   
   return (
     <>
