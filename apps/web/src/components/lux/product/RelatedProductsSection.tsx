@@ -33,6 +33,7 @@ export function RelatedProductsSection({
             <ProductCard
               key={product.id}
               icon="👟"
+              slug={product.slug}
               title={product.name}
               subtitle={product.shortDescription ?? product.description}
               priceLabel={new Intl.NumberFormat('vi-VN', {

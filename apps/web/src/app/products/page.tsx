@@ -123,7 +123,7 @@ function ProductsContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h18M5 7v11a2 2 0 002 2h10a2 2 0 002-2V7M9 7V4a3 3 0 016 0v3" />
                 </svg>
                 <h3 className="mb-2 text-lg font-semibold text-white">Không có sản phẩm nào</h3>
-                <p className="text-sm text-gray-400">Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</p>
+                <p className="text-sm text-gray-400">Không tìm thấy sản phẩm phù hợp.</p>
                 <div className="mt-4 flex justify-center">
                   <button
                     type="button"
@@ -135,7 +135,8 @@ function ProductsContent() {
                     }}
                     className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
                   >
-                    Xóa bộ lọc
+                   
+                    Quay lại
                   </button>
                 </div>
               </div>

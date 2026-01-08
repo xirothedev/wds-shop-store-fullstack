@@ -13,9 +13,11 @@ export type ProductBadge = {
 export type ProductCardProps = {
   icon: React.ReactNode;
   title: string;
+  slug: string;
   subtitle?: string;
   priceLabel: string;
   badge?: ProductBadge;
+  img?: string;
 };
 
 export type StatItem = {
