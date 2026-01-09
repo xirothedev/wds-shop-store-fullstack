@@ -8,6 +8,7 @@ import { LuxNavbar } from '@/components/lux/LuxNavbar';
 import { ProductSliderSection } from '@/components/lux/ProductSliderSection';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
 import { StatsBar } from '@/components/lux/StatsBar';
+import ProductsContent from './products/page';
 
 import { redirect } from 'next/navigation';
 export const metadata: Metadata = {
@@ -25,17 +26,17 @@ export const metadata: Metadata = {
 
 export default function Home({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }  }) {
   const search = searchParams.search;
-  if (search) {
-    const value = Array.isArray(search) ? search[0] : search;
-    const encoded = encodeURIComponent(value);
-    redirect(`/products?search=${encoded}`);
-  }
+  
   
   return (
     <>
       <LuxNavbar links={navLinks} cartCount={3} />
-
-      <section className="relative flex items-center px-6 pt-24 pb-16">
+      {
+        search ? (
+          <ProductsContent />
+        ): (
+            <>
+               <section className="relative flex items-center px-6 pt-24 pb-16">
         <div className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/10 blur-[120px]" />
 
         <div className="mx-auto grid max-w-7xl items-center gap-12 md:grid-cols-2">
@@ -81,6 +82,11 @@ export default function Home({searchParams}: {searchParams: { [key: string]: str
       <RevealOnScroll>
         <StatsBar items={statsItems} />
       </RevealOnScroll>
+            </>
+        )
+      }
+
+     
     </>
   );
 }
