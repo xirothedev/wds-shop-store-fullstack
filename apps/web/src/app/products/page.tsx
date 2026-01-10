@@ -1,18 +1,15 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import InfiniteScroll from 'react-infinite-scroll-component';
 
 import { navLinks } from '@/components/lux/data';
 import { LuxNavbar } from '@/components/lux/LuxNavbar';
-import { ProductListCard } from '@/components/lux/product/ProductListCard';
+import ProductsLists from '@/components/lux/product/ProductsLists';
 import { getAllProducts } from '@/lib/products';
 import type { Product } from '@/types/product';
 
 import ProductsLoading from './loading';
-import ProductsLists from '@/components/lux/product/ProductsLists';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -23,7 +20,6 @@ export function ProductsContent() {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   // Get filters from URL params
   const gender = searchParams.get('gender') as
@@ -32,16 +28,16 @@ export function ProductsContent() {
     | 'UNISEX'
     | null;
   const sale = searchParams.get('sale') === 'true';
-  const search = searchParams.get("search");
+  const search = searchParams.get('search');
 
   // Memoize filters to prevent infinite loops
   const filters = useMemo(
     () => ({
       ...(gender && { gender }),
       ...(sale && { sale: true }),
-      ...(search && {search})
+      ...(search && { search }),
     }),
-    [gender, sale,search]
+    [gender, sale, search]
   );
 
   const loadMoreProducts = useCallback(async () => {
@@ -110,16 +106,9 @@ export function ProductsContent() {
         isLoading={isLoading}
         products={products}
         router={router}
-        searchParams={searchParams}
-        pathname={pathname}
-        gender={gender}
-        filters={filters}
-        sale={sale}
         loadMoreProducts={loadMoreProducts}
         hasMore={hasMore}
       />
-     
-
     </>
   );
 }

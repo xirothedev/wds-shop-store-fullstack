@@ -1,4 +1,4 @@
-  import type { Product } from '@/types/product';
+import type { Product } from '@/types/product';
 
 import { apiClient } from './axios';
 
@@ -17,15 +17,15 @@ interface ApiResponse<T> {
 export const search = async (
   query: string,
   gender?: string,
-  isSale?:string,
+  isSale?: string
 ): Promise<Product[]> => {
   const params: Record<string, string> = {};
 
   if (gender) {
     params.gender = gender;
   }
-  if(isSale){
-    params.isSale=isSale
+  if (isSale) {
+    params.isSale = isSale;
   }
   params.q = query;
 
@@ -46,15 +46,15 @@ export const search = async (
 export const suggestions = async (
   query: string,
   gender?: string,
-  isSale?:string,
+  isSale?: string
 ): Promise<string[]> => {
   const params: Record<string, string> = {};
 
   if (gender) {
     params.gender = gender;
   }
-  if(isSale){
-    params.isSale=isSale
+  if (isSale) {
+    params.isSale = isSale;
   }
   params.q = query;
 
@@ -66,4 +66,3 @@ export const suggestions = async (
   );
   return response.data.data;
 };
-

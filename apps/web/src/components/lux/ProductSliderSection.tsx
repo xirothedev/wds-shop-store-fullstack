@@ -26,7 +26,6 @@ export function ProductSliderSection({
     const delta = direction === 'left' ? -cardWidth : cardWidth;
     container.scrollBy({ left: delta, behavior: 'smooth' });
   };
-  
 
   return (
     <section className="mx-auto max-w-[1400px] overflow-hidden px-6 py-24">

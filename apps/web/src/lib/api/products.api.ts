@@ -10,7 +10,7 @@ interface ApiResponse<T> {
 export const getProducts = async (
   gender?: string,
   isSale?: string,
-  search?:string
+  search?: string
 ): Promise<Product[]> => {
   const params: Record<string, string> = {};
 
@@ -21,7 +21,7 @@ export const getProducts = async (
     params.isSale = isSale;
   }
   if (search) {
-    params.search = search
+    params.search = search;
   }
 
   const response = await apiClient.get<ApiResponse<Product[]>>(
@@ -31,16 +31,17 @@ export const getProducts = async (
     }
   );
 
-
   return response.data.data;
 };
 
-export const getProductBySlug = async (slug: string): Promise<Product | undefined> => {
+export const getProductBySlug = async (
+  slug: string
+): Promise<Product | undefined> => {
   const response = await apiClient.get<ApiResponse<Product>>(
     `/api/products/slug/${slug}`
   );
   return response.data.data;
-} 
+};
 export const getRelatedProducts = async (slug: string): Promise<Product[]> => {
   const response = await apiClient.get<ApiResponse<Product[]>>(
     `/api/products/related/${slug}`
@@ -52,4 +53,4 @@ export const getFeaturedProducts = async (): Promise<Product[]> => {
     `/api/products/featured`
   );
   return response.data.data;
-}
+};

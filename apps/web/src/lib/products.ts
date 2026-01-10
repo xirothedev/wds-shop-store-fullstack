@@ -1,10 +1,10 @@
 import type { Product, ProductImage } from '@/types/product';
 
 import {
-    getProductBySlug as getProductBySlugApi,
-    getProducts,
-    getRelatedProducts as getRelatedProductsApi,
-    getFeaturedProducts as getFeaturedProductsApi,
+  getFeaturedProducts as getFeaturedProductsApi,
+  getProductBySlug as getProductBySlugApi,
+  getProducts,
+  getRelatedProducts as getRelatedProductsApi,
 } from './api/products.api';
 
 /**
@@ -13,43 +13,39 @@ import {
  * - Ensure all required fields are present
  */
 function transformProductFromApi(apiProduct: any): Product {
-    const images: ProductImage[] =
-        apiProduct.images && Array.isArray(apiProduct.images)
-            ? apiProduct.images.map((url: string, index: number) => ({
-                  id: `img-${index}`,
-                  src: url,
-                  alt: apiProduct.name || 'Product image',
-              }))
-            : [];
+  const images: ProductImage[] =
+    apiProduct.images && Array.isArray(apiProduct.images)
+      ? apiProduct.images.map((url: string, index: number) => ({
+          id: `img-${index}`,
+          src: url,
+          alt: apiProduct.name || 'Product image',
+        }))
+      : [];
 
-    // Transform sizeStocks from Prisma format to frontend format
-    const sizeStocks =
-        apiProduct.sizeStocks && Array.isArray(apiProduct.sizeStocks)
-            ? apiProduct.sizeStocks.map((stock: any) => ({
-                  id: stock.id || `size-${stock.size}`,
-                  size: stock.size,
-                  stock: stock.stock || 0,
-              }))
-            : undefined;
+  // Transform sizeStocks from Prisma format to frontend format
+  const sizeStocks =
+    apiProduct.sizeStocks && Array.isArray(apiProduct.sizeStocks)
+      ? apiProduct.sizeStocks.map((stock: any) => ({
+          id: stock.id || `size-${stock.size}`,
+          size: stock.size,
+          stock: stock.stock || 0,
+        }))
+      : undefined;
 
-    return {
-        ...apiProduct,
-        images,
-        sizeStocks,
-        ratingValue: apiProduct.ratingValue
-            ? Number(apiProduct.ratingValue)
-            : 0,
-        ratingCount: apiProduct.ratingCount
-            ? Number(apiProduct.ratingCount)
-            : 0,
-        priceCurrent: Number(apiProduct.priceCurrent) || 0,
-        priceOriginal: apiProduct.priceOriginal
-            ? Number(apiProduct.priceOriginal)
-            : undefined,
-        priceDiscount: apiProduct.priceDiscount
-            ? Number(apiProduct.priceDiscount)
-            : undefined,
-    };
+  return {
+    ...apiProduct,
+    images,
+    sizeStocks,
+    ratingValue: apiProduct.ratingValue ? Number(apiProduct.ratingValue) : 0,
+    ratingCount: apiProduct.ratingCount ? Number(apiProduct.ratingCount) : 0,
+    priceCurrent: Number(apiProduct.priceCurrent) || 0,
+    priceOriginal: apiProduct.priceOriginal
+      ? Number(apiProduct.priceOriginal)
+      : undefined,
+    priceDiscount: apiProduct.priceDiscount
+      ? Number(apiProduct.priceDiscount)
+      : undefined,
+  };
 }
 
 const MOCK_PRODUCTS: Product[] = [
@@ -605,7 +601,6 @@ const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-
 export async function getAllProducts(
   page: number = 1,
   limit: number = 12,
@@ -619,7 +614,7 @@ export async function getAllProducts(
     const MOCK_PRODUCTS = await getProducts(
       filters?.gender,
       filters?.sale ? 'true' : 'false',
-      filters?.search,
+      filters?.search
     );
 
     // Ensure we have an array
@@ -643,7 +638,9 @@ export async function getAllProducts(
   }
 }
 
-export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+export async function getProductBySlug(
+  slug: string
+): Promise<Product | undefined> {
   try {
     const apiProduct = await getProductBySlugApi(slug);
     if (!apiProduct) {
@@ -670,8 +667,6 @@ export async function getProductById(id: string): Promise<Product | undefined> {
     return undefined;
   }
 }
-
-
 
 export async function getRelatedProducts(slug: string): Promise<Product[]> {
   try {

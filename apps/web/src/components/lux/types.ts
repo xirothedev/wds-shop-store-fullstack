@@ -1,4 +1,4 @@
-import { ProductImage } from "@/types/product";
+import { ProductImage } from '@/types/product';
 
 export type NavLink = {
   label: string;
@@ -18,7 +18,7 @@ export type ProductCardProps = {
   slug: string;
   priceCurrent: number;
   badge?: string | ProductBadge;
-  images: ProductImage[];
+  images?: ProductImage[];
   ratingCount?: number;
   ratingValue?: number;
 };

@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.wss.xirothedev.site',
         port: '',
-        pathname: '/**', 
+        pathname: '/**',
       },
     ],
   },

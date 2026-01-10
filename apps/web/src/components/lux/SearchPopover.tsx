@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
-import useDebounce from '@/lib/hooks/useDebounce';
 import { suggestions as getSuggestions } from '@/lib/api/search.api';
-import { useRouter, usePathname } from 'next/navigation';
+import useDebounce from '@/lib/hooks/useDebounce';
 type Props = {
   onClose?: () => void;
 };
@@ -19,17 +18,17 @@ export function SearchPopover({ onClose }: Props) {
   const debounced = useDebounce(input, 500);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
- 
+
   const gender = searchParams.get('gender') as
     | 'MALE'
     | 'FEMALE'
     | 'UNISEX'
     | null;
-const isSale = searchParams.get('sale');
+  const isSale = searchParams.get('sale');
   const { data, error, isLoading } = useQuery({
     queryKey: ['suggestions', debounced, gender],
-    queryFn: () => getSuggestions(debounced, gender || undefined,isSale || undefined),
+    queryFn: () =>
+      getSuggestions(debounced, gender || undefined, isSale || undefined),
     enabled: !!debounced && debounced.length > 0,
   });
 
@@ -43,7 +42,7 @@ const isSale = searchParams.get('sale');
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
- 
+
   const handleChange = (value: string) => {
     setInput(value);
   };
@@ -52,7 +51,7 @@ const isSale = searchParams.get('sale');
     const trimmed = q.trim();
     if (!trimmed) return;
     // perform immediate search action here (navigate or fetch)
-   setInput(trimmed);
+    setInput(trimmed);
     const url = buildUrlWithSearch(trimmed);
     if (!url) return;
     router.push(url);
@@ -66,13 +65,13 @@ const isSale = searchParams.get('sale');
     }
   };
 
-  const handleSearch = (searchKey:string) => {
-      const trimmed = searchKey.trim();
-      const url = buildUrlWithSearch(trimmed);
-      if (!url) return;
-      router.push(url);
-      onClose?.();
-  }
+  const handleSearch = (searchKey: string) => {
+    const trimmed = searchKey.trim();
+    const url = buildUrlWithSearch(trimmed);
+    if (!url) return;
+    router.push(url);
+    onClose?.();
+  };
 
   // Build a URL merging current search params and the new `search` param.
   // Returns `null` when `searchKey` is empty.
@@ -134,16 +133,18 @@ const isSale = searchParams.get('sale');
         <div className="mt-4 max-h-56 overflow-y-auto">
           <div className="mb-2 px-3">
             <div className="flex items-center justify-between">
-             {input.length > 0 &&  <h4 className="mb-2 px-1 text-sm font-semibold text-gray-200">
-                              Tìm kiếm: {input}
-              </h4>}
+              {input.length > 0 && (
+                <h4 className="mb-2 px-1 text-sm font-semibold text-gray-200">
+                  Tìm kiếm: {input}
+                </h4>
+              )}
               <div className="w-11" />
             </div>
           </div>
 
           {isLoading && (
-            <div className="px-3 py-4 text-center flex items-center justify-center text-sm text-gray-400">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="flex items-center justify-center px-3 py-4 text-center text-sm text-gray-400">
+              <Loader2 className="h-4 w-4 animate-spin" />
             </div>
           )}
 
@@ -153,17 +154,17 @@ const isSale = searchParams.get('sale');
             </div>
           )}
 
-          
-
           {!isLoading && !error && data && data?.length > 0 && (
             <ul className="space-y-2 px-1">
               {data?.map((item) => (
                 <li
                   key={item}
                   className="flex items-center justify-between rounded-md px-3 py-2 transition-colors hover:bg-white/5"
-                  onClick={()=>{handleSearch(item)}}
+                  onClick={() => {
+                    handleSearch(item);
+                  }}
                 >
-                  <span className="text-gray-300" >{item}</span>
+                  <span className="text-gray-300">{item}</span>
 
                   <button>
                     <svg
