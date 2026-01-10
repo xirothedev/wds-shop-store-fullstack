@@ -1,3 +1,5 @@
+import { ProductImage } from '@/types/product';
+
 export type NavLink = {
   label: string;
   href: string;
@@ -11,11 +13,14 @@ export type ProductBadge = {
 };
 
 export type ProductCardProps = {
-  icon: React.ReactNode;
-  title: string;
-  subtitle?: string;
-  priceLabel: string;
-  badge?: ProductBadge;
+  id: string;
+  name: string;
+  slug: string;
+  priceCurrent: number;
+  badge?: string | ProductBadge;
+  images?: ProductImage[];
+  ratingCount?: number;
+  ratingValue?: number;
 };
 
 export type StatItem = {

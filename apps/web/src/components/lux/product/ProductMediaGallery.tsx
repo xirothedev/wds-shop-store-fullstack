@@ -72,17 +72,14 @@ export function ProductMediaGallery({
         <div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-amber-500/10 via-transparent to-amber-500/5" />
         <div className="aspect-square w-full cursor-crosshair overflow-hidden">
           <div className="relative flex h-full items-center justify-center bg-black/40">
-            {/* Placeholder nếu chưa có ảnh thực tế */}
             {selectedImage?.src ? (
               <>
                 <Image
-                  unoptimized
-                  height={0}
-                  width={0}
                   ref={setImageRef}
                   src={selectedImage.src}
                   alt={selectedImage.alt}
-                  className="h-full w-full object-contain select-none"
+                  className="h-full w-full object-cover select-none"
+                  fill
                   draggable={false}
                 />
                 {/* Lens zoom effect */}

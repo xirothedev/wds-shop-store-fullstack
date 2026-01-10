@@ -32,22 +32,13 @@ export function RelatedProductsSection({
           {products.map((product) => (
             <ProductCard
               key={product.id}
-              icon="👟"
-              title={product.name}
-              subtitle={product.shortDescription ?? product.description}
-              priceLabel={new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-                maximumFractionDigits: 0,
-              }).format(product.priceCurrent)}
-              badge={
-                product.badge
-                  ? {
-                      label: product.badge,
-                      variant: 'hot',
-                    }
-                  : undefined
-              }
+              slug={product.slug}
+              name={product.name}
+              priceCurrent={product.priceCurrent}
+              images={product.images ?? []}
+              badge={product.badge}
+              ratingCount={product.ratingCount}
+              ratingValue={product.ratingValue}
             />
           ))}
         </div>
