@@ -5,7 +5,7 @@ export interface ProductImage {
 }
 
 export interface ProductSizeStock {
-  id: string;
+  
   size: string;
   stock: number;
 }

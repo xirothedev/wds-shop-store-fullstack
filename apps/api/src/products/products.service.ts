@@ -8,37 +8,43 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
-  private readonly CDN_BASE_URL =
-    process.env.CDN_BASE_URL || 'https://cdn.wss.xirothedev.site';
+  private readonly CDN_BASE_URL = process.env.CDN_BASE_URL;
 
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Transform product images to include CDN prefix
+   * Transform product images to include CDN prefix and format sizeStocks
    */
   private transformProductImages(product: any): any {
-    if (product.images && Array.isArray(product.images)) {
-      return {
-        ...product,
-        images: product.images.map((image: string) => {
-          // Skip if already has http/https prefix
-          if (
-            typeof image === 'string' &&
-            (image.startsWith('http://') || image.startsWith('https://'))
-          ) {
-            return image;
-          }
-          // Add CDN prefix
-          if (typeof image === 'string') {
-            return `${this.CDN_BASE_URL}${
-              image.startsWith('/') ? '' : '/'
-            }${image}`;
-          }
+    const transformed = { ...product };
+
+    // Transform images with CDN prefix
+    if (transformed.images && Array.isArray(transformed.images)) {
+      transformed.images = transformed.images.map((image: string) => {
+        // Skip if already has http/https prefix
+        if (
+          typeof image === 'string' &&
+          (image.startsWith('http://') || image.startsWith('https://'))
+        ) {
           return image;
-        }),
-      };
+        }
+        // Add CDN prefix
+        if (typeof image === 'string') {
+          return `${this.CDN_BASE_URL}${image.startsWith('/') ? '' : '/'}${image}`;
+        }
+        return image;
+      });
     }
-    return product;
+
+    // Transform sizeStocks to simple format {size, stock}
+    if (transformed.sizeStocks && Array.isArray(transformed.sizeStocks)) {
+      transformed.sizeStocks = transformed.sizeStocks.map((sizeStock: any) => ({
+        size: sizeStock.size,
+        stock: sizeStock.stock,
+      }));
+    }
+
+    return transformed;
   }
 
   private async generateUniqueSlug(name: string): Promise<string> {
@@ -58,7 +64,10 @@ export class ProductsService {
       isPublished: true,
     };
 
-    const products = await this.prisma.product.findMany({ where });
+    const products = await this.prisma.product.findMany({
+      where,
+      include: { sizeStocks: true },
+    });
     const featuredProducts = products
       .filter(
         (product) => product.ratingCount >= 100 && product.ratingValue >= 4.0
@@ -159,6 +168,7 @@ export class ProductsService {
 
     const products = await this.prisma.product.findMany({
       where,
+      include: { sizeStocks: true },
     });
 
     // Transform images with CDN prefix
@@ -322,7 +332,10 @@ export class ProductsService {
     return products.map((product) => product.name);
   }
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { sizeStocks: true },
+    });
     if (!product) {
       throw new NotFoundException('Product not found (VERIFY_UPDATE)');
     }
@@ -332,6 +345,7 @@ export class ProductsService {
   async findOneBySlug(slug: string) {
     const product = await this.prisma.product.findUnique({
       where: { slug },
+      include: { sizeStocks: true },
     });
     if (!product) {
       throw new NotFoundException('Product not found (VERIFY_UPDATE)');
@@ -369,6 +383,7 @@ export class ProductsService {
       orderBy: {
         createdAt: 'desc',
       },
+      include: { sizeStocks: true },
     });
 
     // Transform images with CDN prefix
