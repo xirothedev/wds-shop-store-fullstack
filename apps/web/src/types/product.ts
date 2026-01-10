@@ -51,11 +51,9 @@ export interface Product {
   isLimited?: boolean;
 }
 
-export interface CartItem {
-  productId: string;
-  productSlug: string;
-  productName: string;
+export interface CartItem extends Product {
+  cartItemId: string;
   size: string;
-  price: number;
   quantity: number;
+  stock: number;
 }

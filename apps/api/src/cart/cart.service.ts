@@ -1,14 +1,47 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 
 import { PrismaService } from '@/prisma/prisma.service';
 
-import { ItemDeleteRequestDto, ItemDto, ItemRequestDto } from './dto/cart.dto';
+import {
+  ItemDeleteRequestDto,
+  ItemDto,
+  ItemRequestDto,
+  QueryResponseDto,
+} from './dto/cart.dto';
+
+export interface userData {
+  sub: string;
+}
 
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwt: JwtService,
+    private readonly config: ConfigService
+  ) {}
 
-  async getCartIdfromUserId(userId: string) {
+  async getUserIdFromToken(token: string) {
+    let userData: userData;
+    try {
+      userData = this.jwt.verify(token, {
+        secret: this.config.getOrThrow<string>('JWT_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or outdated access token!');
+    }
+    const userId: string = userData.sub;
+    return userId;
+  }
+
+  async getCartIdFromToken(token: string) {
+    const userId = await this.getUserIdFromToken(token);
     let data = await this.prisma.cart.findUnique({
       where: {
         userId,
@@ -26,46 +59,91 @@ export class CartService {
     return data.id;
   }
 
-  async getAll(cartId: string): Promise<any[]> {
-    console.log(cartId);
-    const data = await this.prisma.$queryRaw<any[]>`
-      SELECT 
-        products.id,
-        products.slug,
-        products.name,
-        products.description,
-        products."priceCurrent"::numeric as "priceCurrent",
-        products."priceOriginal"::numeric,
-        products."priceDiscount"::numeric,
-        products.badge,
-        products."ratingValue"::numeric,
-        products."ratingCount",
-        products.gender,
-        products."isPublished",
-        products."createdAt",
-        products."updatedAt",
-        cart_items.id as "cartItemId",
-        cart_items.quantity,
-        cart_items.size,
-        product_size_stocks.stock
+  async getAll(cartId: string): Promise<QueryResponseDto[]> {
+    const data = await this.prisma.cartItem.findMany({
+      where: {
+        cartId,
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            description: true,
+            priceCurrent: true,
+            priceOriginal: true,
+            priceDiscount: true,
+            badge: true,
+            ratingValue: true,
+            ratingCount: true,
+            gender: true,
+            isPublished: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        productSizeStock: {
+          select: {
+            stock: true,
+          },
+        },
+      },
 
-      FROM cart_items
-      join products ON products.id = cart_items."productId"
-      LEFT JOIN product_size_stocks ON product_size_stocks.size=cart_items.size AND product_size_stocks."productId"=cart_items."productId";
-    `;
-    return data;
+      orderBy: {
+        product: {
+          name: 'asc',
+        },
+      },
+    });
+
+    return data.map((item) => ({
+      id: item.product.id,
+      cartId: item.cartId,
+      productId: item.productId,
+      size: item.size,
+      quantity: item.quantity,
+      stock: item.productSizeStock?.stock ?? 1,
+      slug: item.product.slug,
+      name: item.product.name,
+      description: item.product.description,
+      priceCurrent: item.product.priceCurrent,
+      priceOriginal: item.product.priceOriginal,
+      priceDiscount: item.product.priceDiscount,
+      badge: item.product.badge ?? undefined,
+      ratingValue: item.product.ratingValue,
+      ratingCount: item.product.ratingCount,
+      gender: item.product.gender,
+      isPublished: item.product.isPublished,
+      createdAt: new Date(item.product.updatedAt).toDateString(),
+      updatedAt: new Date(item.product.updatedAt).toDateString(),
+      cartItemId: item.id,
+    }));
   }
 
   async addItem(item: ItemRequestDto): Promise<ItemDto> {
-    console.log(item);
+    if (!item.cartId) {
+      throw new Error('No cart provided');
+    }
+
     const existingItem = await this.prisma.cartItem.findFirst({
       where: {
         productId: item.productId,
+        size: item.size,
         cartId: item.cartId,
       },
     });
 
-    console.log(existingItem);
+    const inStock = await this.prisma.productSizeStock.findFirst({
+      where: {
+        productId: item.productId,
+        size: item.size,
+      },
+    });
+
+    if (!inStock) {
+      throw new ConflictException(`There is no product in stock`);
+    }
 
     if (existingItem) {
       throw new ConflictException(`The Cart already have this item`);
@@ -73,7 +151,11 @@ export class CartService {
 
     const newItem = await this.prisma.cartItem.create({
       data: {
-        ...item,
+        productId: item.productId,
+        size: item.size,
+        cartId: item.cartId,
+        quantity: item.quantity,
+        productSizeStockId: inStock.id,
       },
     });
 
@@ -81,6 +163,9 @@ export class CartService {
   }
 
   async editItem(item: ItemRequestDto): Promise<ItemDto> {
+    if (!item.cartId) {
+      throw new Error('No cart provided');
+    }
     const existingItem = await this.prisma.cartItem.findFirst({
       where: {
         id: item.id,
@@ -96,9 +181,9 @@ export class CartService {
     const newItem = await this.prisma.cartItem.update({
       where: {
         cartId_productId_size: {
-          cartId: item.cartId,
-          productId: item.productId,
-          size: item.size,
+          cartId: existingItem.cartId,
+          productId: existingItem.productId,
+          size: existingItem.size,
         },
       },
 
@@ -114,6 +199,7 @@ export class CartService {
     try {
       await this.prisma.cartItem.delete({
         where: {
+          cartId: item.cartId,
           id: item.id,
         },
       });
