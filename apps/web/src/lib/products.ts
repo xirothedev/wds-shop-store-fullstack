@@ -1,4 +1,52 @@
-import type { Product } from '@/types/product';
+import type { Product, ProductImage } from '@/types/product';
+
+import {
+  getFeaturedProducts as getFeaturedProductsApi,
+  getProductBySlug as getProductBySlugApi,
+  getProducts,
+  getRelatedProducts as getRelatedProductsApi,
+} from './api/products.api';
+
+/**
+ * Transform API product to frontend Product format
+ * - Convert images from string[] to ProductImage[]
+ * - Ensure all required fields are present
+ */
+function transformProductFromApi(apiProduct: any): Product {
+  const images: ProductImage[] =
+    apiProduct.images && Array.isArray(apiProduct.images)
+      ? apiProduct.images.map((url: string, index: number) => ({
+          id: `img-${index}`,
+          src: url,
+          alt: apiProduct.name || 'Product image',
+        }))
+      : [];
+
+  // Transform sizeStocks from Prisma format to frontend format
+  const sizeStocks =
+    apiProduct.sizeStocks && Array.isArray(apiProduct.sizeStocks)
+      ? apiProduct.sizeStocks.map((stock: any) => ({
+          id: stock.id || `size-${stock.size}`,
+          size: stock.size,
+          stock: stock.stock || 0,
+        }))
+      : undefined;
+
+  return {
+    ...apiProduct,
+    images,
+    sizeStocks,
+    ratingValue: apiProduct.ratingValue ? Number(apiProduct.ratingValue) : 0,
+    ratingCount: apiProduct.ratingCount ? Number(apiProduct.ratingCount) : 0,
+    priceCurrent: Number(apiProduct.priceCurrent) || 0,
+    priceOriginal: apiProduct.priceOriginal
+      ? Number(apiProduct.priceOriginal)
+      : undefined,
+    priceDiscount: apiProduct.priceDiscount
+      ? Number(apiProduct.priceDiscount)
+      : undefined,
+  };
+}
 
 const MOCK_PRODUCTS: Product[] = [
   {
@@ -553,67 +601,96 @@ const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export function getAllProducts(
+export async function getAllProducts(
   page: number = 1,
   limit: number = 12,
   filters?: {
     gender?: 'MALE' | 'FEMALE' | 'UNISEX';
     sale?: boolean;
+    search?: string;
   }
-): { products: Product[]; hasMore: boolean } {
-  let filteredProducts = MOCK_PRODUCTS.filter(
-    (product) => product.isPublished !== false
-  );
-
-  // Filter by gender
-  if (filters?.gender) {
-    filteredProducts = filteredProducts.filter(
-      (product) =>
-        product.gender === filters.gender || product.gender === 'UNISEX'
+): Promise<{ products: Product[]; hasMore: boolean }> {
+  try {
+    const MOCK_PRODUCTS = await getProducts(
+      filters?.gender,
+      filters?.sale ? 'true' : 'false',
+      filters?.search
     );
-  }
 
-  // Filter by sale (products with discount)
-  if (filters?.sale) {
-    filteredProducts = filteredProducts.filter(
-      (product) =>
-        product.priceOriginal && product.priceOriginal > product.priceCurrent
+    // Ensure we have an array
+    if (!Array.isArray(MOCK_PRODUCTS)) {
+      console.error('getProducts did not return an array:', MOCK_PRODUCTS);
+      return { products: [], hasMore: false };
+    }
+
+    const filteredProducts = MOCK_PRODUCTS.filter(
+      (product) => product.isPublished !== false
     );
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const products = filteredProducts.slice(startIndex, endIndex);
+    const hasMore = endIndex < filteredProducts.length;
+
+    return { products, hasMore };
+  } catch (error) {
+    console.error('Error in getAllProducts:', error);
+    return { products: [], hasMore: false };
   }
-
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const products = filteredProducts.slice(startIndex, endIndex);
-  const hasMore = endIndex < filteredProducts.length;
-
-  return { products, hasMore };
 }
 
-export function getProductBySlug(slug: string): Product | undefined {
-  return MOCK_PRODUCTS.find((product) => product.slug === slug);
-}
-
-export function getProductById(id: string): Product | undefined {
-  return MOCK_PRODUCTS.find((product) => product.id === id);
-}
-
-export function getRelatedProducts(slug: string): Product[] {
-  const current = getProductBySlug(slug);
-  if (!current) return MOCK_PRODUCTS.slice(0, 3);
-
-  const sameCategory = MOCK_PRODUCTS.filter(
-    (product) => product.slug !== slug && product.category === current.category
-  );
-
-  if (sameCategory.length >= 3) {
-    return sameCategory.slice(0, 3);
+export async function getProductBySlug(
+  slug: string
+): Promise<Product | undefined> {
+  try {
+    const apiProduct = await getProductBySlugApi(slug);
+    if (!apiProduct) {
+      return undefined;
+    }
+    return transformProductFromApi(apiProduct);
+  } catch (error) {
+    console.error('Error in getProductBySlug:', error);
+    return undefined;
   }
+}
+export async function getProductById(id: string): Promise<Product | undefined> {
+  try {
+    // Note: API doesn't have getProductById endpoint, using getProducts and filtering
+    // If API adds this endpoint later, update this function
+    const products = await getProducts();
+    const product = products.find((p) => p.id === id);
+    if (!product) {
+      return undefined;
+    }
+    return product;
+  } catch (error) {
+    console.error('Error in getProductById:', error);
+    return undefined;
+  }
+}
 
-  const others = MOCK_PRODUCTS.filter(
-    (product) => product.slug !== slug && product.category !== current.category
-  );
-
-  return [...sameCategory, ...others].slice(0, 3);
+export async function getRelatedProducts(slug: string): Promise<Product[]> {
+  try {
+    const related = await getRelatedProductsApi(slug);
+    if (!related || !Array.isArray(related)) {
+      return [];
+    }
+    return related.map(transformProductFromApi);
+  } catch (error) {
+    console.error('Error in getRelatedProducts:', error);
+    return [];
+  }
+}
+export async function getFeaturedProducts(): Promise<Product[]> {
+  try {
+    const featured = await getFeaturedProductsApi();
+    if (!featured || !Array.isArray(featured)) {
+      return [];
+    }
+    return featured.map(transformProductFromApi);
+  } catch (error) {
+    console.error('Error in getFeaturedProducts:', error);
+    return [];
+  }
 }
 
 // CRUD Functions for Admin Panel

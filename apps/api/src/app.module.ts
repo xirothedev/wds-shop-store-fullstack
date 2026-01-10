@@ -14,6 +14,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { CsrfService } from './common/services/csrf.service';
 import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProductsModule } from './products/products.module';
 import { StorageModule } from './storage/storage.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { StorageModule } from './storage/storage.module';
     CartModule,
     MailModule,
     StorageModule,
+    ProductsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env'],

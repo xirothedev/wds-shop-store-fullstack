@@ -56,9 +56,9 @@ export function LuxFooter({ links, socials }: LuxFooterProps) {
         <div className="space-y-4">
           <h4 className="text-lg font-bold">Theo dõi</h4>
           <div className="flex space-x-4">
-            {socials.map((social) => (
+            {socials.map((social, index) => (
               <Link
-                key={social.href}
+                key={index}
                 href={social.href}
                 className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/5 transition-all hover:bg-amber-500 hover:text-black"
               >

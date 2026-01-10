@@ -12,7 +12,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [pg_trgm, unaccent]
 }
 
 enum UserRole {
@@ -228,6 +229,9 @@ model Product {
   isPublished Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Product category
+  category String? @db.VarChar(255) // Product category
 
   // Relations
   sizeStocks ProductSizeStock[] // Manage stock by size (only t-shirt)

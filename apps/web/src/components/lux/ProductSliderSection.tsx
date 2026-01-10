@@ -87,7 +87,7 @@ export function ProductSliderSection({
         className="no-scrollbar flex gap-6 overflow-x-auto scroll-smooth px-4 pt-2 pb-12 md:px-0"
       >
         {products.map((product) => (
-          <ProductCard key={product.title} {...product} />
+          <ProductCard key={product.id} {...product} />
         ))}
       </div>
     </section>

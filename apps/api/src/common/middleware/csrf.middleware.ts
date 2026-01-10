@@ -32,7 +32,8 @@ export class CsrfMiddleware implements NestMiddleware {
       req.path === '/auth/forgot-password' ||
       req.path === '/auth/reset-password' ||
       req.path === '/auth/verify-email' ||
-      req.path === '/auth/request-verification'
+      req.path === '/auth/request-verification' ||
+      req.path.startsWith('/api/products')
     ) {
       return next();
     }
