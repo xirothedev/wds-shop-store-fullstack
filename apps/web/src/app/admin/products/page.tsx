@@ -73,8 +73,8 @@ export default function AdminProductsPage() {
     setIsFormOpen(true);
   };
 
-  const handleEdit = (productId: string) => {
-    const product = getProductById(productId);
+  const handleEdit = async (productId: string) => {
+    const product = await getProductById(productId);
     if (product) {
       setEditingProduct(product);
       setIsFormOpen(true);
