@@ -3,7 +3,8 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 
 import ProductsLoading from '@/app/products/loading';
 import { ProductListCard } from './ProductListCard';
-const ProductsLists = ({isLoading,products,router,searchParams,pathname,gender,filters,sale,loadMoreProducts,hasMore}) => {
+const ProductsLists = ({ isLoading, products, router, searchParams, pathname, gender, filters, sale, loadMoreProducts, hasMore }) => {
+    
     return (
         (products.length === 0) ? (
             
@@ -28,10 +29,7 @@ const ProductsLists = ({isLoading,products,router,searchParams,pathname,gender,f
                             <button
                                 type="button"
                                 onClick={() => {
-                                    const params = new URLSearchParams(Array.from(searchParams.entries()));
-                                    params.delete('search');
-                                    const q = params.toString();
-                                    router.push(q ? `${pathname}?${q}` : pathname);
+                                    router.back();
                                 }}
                                 className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
                             >

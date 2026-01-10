@@ -1,7 +1,7 @@
 
 import type { Metadata } from 'next';
 
-import { featuredProducts, navLinks, statsItems } from '@/components/lux/data';
+import {  navLinks, statsItems } from '@/components/lux/data';
 import { HeroSection } from '@/components/lux/HeroSection';
 import { HeroVisual } from '@/components/lux/HeroVisual';
 import { LuxNavbar } from '@/components/lux/LuxNavbar';
@@ -9,8 +9,8 @@ import { ProductSliderSection } from '@/components/lux/ProductSliderSection';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
 import { StatsBar } from '@/components/lux/StatsBar';
 import ProductsContent from './products/page';
+import { getFeaturedProducts } from '@/lib/products';
 
-import { redirect } from 'next/navigation';
 export const metadata: Metadata = {
   title: 'Trang chủ',
   description:
@@ -24,9 +24,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }  }) {
+export default async function Home({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }  }) {
   const search = searchParams.search;
-  
+const featuredProducts = await getFeaturedProducts();
   
   return (
     <>
@@ -74,7 +74,7 @@ export default function Home({searchParams}: {searchParams: { [key: string]: str
               </span>
             </>
           }
-          description="Tuyển tập những mẫu giày cháy hàng nhất tuần qua"
+          description="Tuyển tập những mẫu giày cháy hàng được yêu thích nhất."
           products={featuredProducts}
         />
       </RevealOnScroll>

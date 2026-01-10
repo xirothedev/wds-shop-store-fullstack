@@ -71,6 +71,18 @@ export class ProductsController {
     const result = await this.productsService.create(createProductDto);
     return result;
   }
+  //get featrured products
+  @Public()
+  @Get('featured')
+  @ApiOperation({ summary: 'Get featured products' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of featured products',
+    type: [ProductDto],
+  })
+  async getFeaturedProducts() {
+    return this.productsService.getFeaturedProducts();
+  }
 
   //get products and search
   @Public()

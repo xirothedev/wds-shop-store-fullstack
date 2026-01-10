@@ -8,192 +8,213 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
-  private readonly CDN_BASE_URL =
-    process.env.CDN_BASE_URL || 'https://cdn.wss.xirothedev.site';
+    private readonly CDN_BASE_URL =
+        process.env.CDN_BASE_URL || 'https://cdn.wss.xirothedev.site';
 
-  constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Transform product images to include CDN prefix
-   */
-  private transformProductImages(product: any): any {
-    if (product.images && Array.isArray(product.images)) {
-      return {
-        ...product,
-        images: product.images.map((image: string) => {
-          // Skip if already has http/https prefix
-          if (
-            typeof image === 'string' &&
-            (image.startsWith('http://') || image.startsWith('https://'))
-          ) {
-            return image;
-          }
-          // Add CDN prefix
-          if (typeof image === 'string') {
-            return `${this.CDN_BASE_URL}${
-              image.startsWith('/') ? '' : '/'
-            }${image}`;
-          }
-          return image;
-        }),
-      };
-    }
-    return product;
-  }
-
-  private async generateUniqueSlug(name: string): Promise<string> {
-    const baseSlug = slugify(name, { lower: true });
-    let slug = baseSlug;
-    let counter = 1;
-
-    while (await this.prisma.product.findUnique({ where: { slug } })) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
+    /**
+     * Transform product images to include CDN prefix
+     */
+    private transformProductImages(product: any): any {
+        if (product.images && Array.isArray(product.images)) {
+            return {
+                ...product,
+                images: product.images.map((image: string) => {
+                    // Skip if already has http/https prefix
+                    if (
+                        typeof image === 'string' &&
+                        (image.startsWith('http://') ||
+                            image.startsWith('https://'))
+                    ) {
+                        return image;
+                    }
+                    // Add CDN prefix
+                    if (typeof image === 'string') {
+                        return `${this.CDN_BASE_URL}${
+                            image.startsWith('/') ? '' : '/'
+                        }${image}`;
+                    }
+                    return image;
+                })
+            };
+        }
+        return product;
     }
 
-    return slug;
-  }
+    private async generateUniqueSlug(name: string): Promise<string> {
+        const baseSlug = slugify(name, { lower: true });
+        let slug = baseSlug;
+        let counter = 1;
 
-  async create(createProductDto: CreateProductDto) {
-    const {
-      name,
-      description,
-      priceCurrent,
-      priceOriginal,
-      priceDiscount,
-      badge,
-      gender,
-      isPublished,
-      sizeStocks,
-      images,
-      category,
-    } = createProductDto;
+        while (await this.prisma.product.findUnique({ where: { slug } })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+        }
 
-    const slug = await this.generateUniqueSlug(name);
+        return slug;
+    }
+    async getFeaturedProducts() {
+        const where = {
+            isPublished: true
+        };
 
-    const data: any = {
-      slug,
-      name,
-      description,
-      priceCurrent: priceCurrent != null ? priceCurrent.toString() : undefined,
-      priceOriginal:
-        priceOriginal != null ? priceOriginal.toString() : undefined,
-      priceDiscount:
-        priceDiscount != null ? priceDiscount.toString() : undefined,
-      badge,
-      gender,
-      isPublished,
-      images,
-      category,
-    };
+        const products = await this.prisma.product.findMany({ where });
+        const featuredProducts = products
+            .filter(
+                product =>
+                    product.ratingCount >= 100 && product.ratingValue >= 4.0
+            )
+            .sort((a, b) => b.ratingValue! - a.ratingValue!);
 
-    if (sizeStocks && Array.isArray(sizeStocks) && sizeStocks.length > 0) {
-      data.sizeStocks = {
-        create: sizeStocks.map((s) => ({
-          size: s.size,
-          stock: s.stock,
-        })),
-      };
+        return featuredProducts.map(product =>
+            this.transformProductImages(product)
+        );
     }
 
-    const product = await this.prisma.product.create({
-      data,
-      include: { sizeStocks: true },
-    });
+    async create(createProductDto: CreateProductDto) {
+        const {
+            name,
+            description,
+            priceCurrent,
+            priceOriginal,
+            priceDiscount,
+            badge,
+            gender,
+            isPublished,
+            sizeStocks,
+            images,
+            category
+        } = createProductDto;
 
-    // Transform images with CDN prefix
-    const transformedProduct = this.transformProductImages(product);
+        const slug = await this.generateUniqueSlug(name);
 
-    return {
-      success: true,
-      message: 'Product created successfully',
-      data: transformedProduct,
-    };
-  }
+        const data: any = {
+            slug,
+            name,
+            description,
+            priceCurrent:
+                priceCurrent != null ? priceCurrent.toString() : undefined,
+            priceOriginal:
+                priceOriginal != null ? priceOriginal.toString() : undefined,
+            priceDiscount:
+                priceDiscount != null ? priceDiscount.toString() : undefined,
+            badge,
+            gender,
+            isPublished,
+            images,
+            category
+        };
 
-  async findAll(gender?: string, isSale?: string): Promise<any[]> {
-    const where: any = {};
+        if (sizeStocks && Array.isArray(sizeStocks) && sizeStocks.length > 0) {
+            data.sizeStocks = {
+                create: sizeStocks.map(s => ({
+                    size: s.size,
+                    stock: s.stock
+                }))
+            };
+        }
 
-    // Strip quotes from query parameter
-    const cleanGender = gender
-      ? gender.replace(/^['"]|['"]$/g, '').trim()
-      : undefined;
+        const product = await this.prisma.product.create({
+            data,
+            include: { sizeStocks: true }
+        });
 
-    if (
-      cleanGender &&
-      ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+        // Transform images with CDN prefix
+        const transformedProduct = this.transformProductImages(product);
+
+        return {
+            success: true,
+            message: 'Product created successfully',
+            data: transformedProduct
+        };
+    }
+
+    async findAll(gender?: string, isSale?: string): Promise<any[]> {
+        const where: any = {};
+
+        // Strip quotes from query parameter
+        const cleanGender = gender
+            ? gender.replace(/^['"]|['"]$/g, '').trim()
+            : undefined;
+
+        if (
+            cleanGender &&
+            ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+        ) {
+            where.gender = cleanGender.toUpperCase();
+        }
+
+        // Filter by sale status
+        // isSale defaults to false, only filter when explicitly true
+        const isSaleValue = isSale
+            ? isSale
+                  .replace(/^['"]|['"]$/g, '')
+                  .trim()
+                  .toLowerCase()
+            : 'false';
+
+        if (isSaleValue === 'true') {
+            where.priceDiscount = {
+                not: null
+            };
+        }
+
+        const products = await this.prisma.product.findMany({
+            where
+        });
+
+        // Transform images with CDN prefix
+        return products.map(product => this.transformProductImages(product));
+    }
+
+    async searchProductsWithRelevance(
+        query: string,
+        gender?: string,
+        isSale?: string
     ) {
-      where.gender = cleanGender.toUpperCase();
-    }
+        // 1. Clean inputs
+        const cleanQuery = query
+            ? query.replace(/^['"]|['"]$/g, '').trim()
+            : '';
+        const cleanGender = gender
+            ? gender.replace(/^['"]|['"]$/g, '').trim()
+            : undefined;
+        const isSaleValue =
+            (isSale
+                ? isSale
+                      .replace(/^['"]|['"]$/g, '')
+                      .trim()
+                      .toLowerCase()
+                : '') === 'true';
 
-    // Filter by sale status
-    // isSale defaults to false, only filter when explicitly true
-    const isSaleValue = isSale
-      ? isSale
-          .replace(/^['"]|['"]$/g, '')
-          .trim()
-          .toLowerCase()
-      : 'false';
+        const genderFilter: 'MALE' | 'FEMALE' | 'UNISEX' | null =
+            cleanGender &&
+            ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+                ? (cleanGender.toUpperCase() as 'MALE' | 'FEMALE' | 'UNISEX')
+                : null;
 
-    if (isSaleValue === 'true') {
-      where.priceDiscount = {
-        not: null,
-      };
-    }
+        // If no search query, return filtered products
+        if (!cleanQuery) {
+            const where: any = { isPublished: true };
+            if (genderFilter) where.gender = genderFilter;
+            if (isSaleValue) where.priceDiscount = { not: null };
 
-    const products = await this.prisma.product.findMany({
-      where,
-    });
+            const products = await this.prisma.product.findMany({
+                where,
+                include: { sizeStocks: true }
+            });
+            return products.map(p => this.transformProductImages(p));
+        }
 
-    // Transform images with CDN prefix
-    return products.map((product) => this.transformProductImages(product));
-  }
+        // 2. Build flexible OR search term ("word1 | word2")
+        const formattedSearchTerm = cleanQuery
+            .split(/\s+/)
+            .filter(word => word.length > 0)
+            .join(' | ');
 
-  async searchProductsWithRelevance(
-    query: string,
-    gender?: string,
-    isSale?: string
-  ) {
-    // 1. Clean inputs
-    const cleanQuery = query ? query.replace(/^['"]|['"]$/g, '').trim() : '';
-    const cleanGender = gender
-      ? gender.replace(/^['"]|['"]$/g, '').trim()
-      : undefined;
-    const isSaleValue =
-      (isSale
-        ? isSale
-            .replace(/^['"]|['"]$/g, '')
-            .trim()
-            .toLowerCase()
-        : '') === 'true';
-
-    const genderFilter: 'MALE' | 'FEMALE' | 'UNISEX' | null =
-      cleanGender &&
-      ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
-        ? (cleanGender.toUpperCase() as 'MALE' | 'FEMALE' | 'UNISEX')
-        : null;
-
-    // If no search query, return filtered products
-    if (!cleanQuery) {
-      const where: any = { isPublished: true };
-      if (genderFilter) where.gender = genderFilter;
-      if (isSaleValue) where.priceDiscount = { not: null };
-
-      const products = await this.prisma.product.findMany({
-        where,
-        include: { sizeStocks: true },
-      });
-      return products.map((p) => this.transformProductImages(p));
-    }
-
-    // 2. Build flexible OR search term ("word1 | word2")
-    const formattedSearchTerm = cleanQuery
-      .split(/\s+/)
-      .filter((word) => word.length > 0)
-      .join(' | ');
-
-    // 3. Query PostgreSQL full-text search (focus on `name` column)
-    const products = await this.prisma.$queryRaw<any[]>`
+        // 3. Query PostgreSQL full-text search (focus on `name` column)
+        const products = await this.prisma.$queryRaw<any[]>`
       SELECT 
         id, 
         ts_rank(
@@ -207,226 +228,229 @@ export class ProductsService {
       LIMIT 50
     `;
 
-    let productIds = products.map((p) => p.id);
+        let productIds = products.map(p => p.id);
 
-    // 4. Fallback: if exactly one product matched, fetch more from same category
-    if (productIds.length === 1) {
-      const mainProductId = productIds[0];
-      const mainProduct = await this.prisma.product.findUnique({
-        where: { id: mainProductId },
-        select: { category: true },
-      });
+        // 4. Fallback: if exactly one product matched, fetch more from same category
+        if (productIds.length === 1) {
+            const mainProductId = productIds[0];
+            const mainProduct = await this.prisma.product.findUnique({
+                where: { id: mainProductId },
+                select: { category: true }
+            });
 
-      if (mainProduct?.category) {
-        const relatedProducts = await this.prisma.product.findMany({
-          where: {
-            category: mainProduct.category,
-            id: { not: mainProductId },
-            isPublished: true,
-            gender: genderFilter || undefined,
-            priceDiscount: isSaleValue ? { not: null } : undefined,
-          },
-          select: { id: true },
-          take: 12,
-          orderBy: { createdAt: 'desc' },
+            if (mainProduct?.category) {
+                const relatedProducts = await this.prisma.product.findMany({
+                    where: {
+                        category: mainProduct.category,
+                        id: { not: mainProductId },
+                        isPublished: true,
+                        gender: genderFilter || undefined,
+                        priceDiscount: isSaleValue ? { not: null } : undefined
+                    },
+                    select: { id: true },
+                    take: 12,
+                    orderBy: { createdAt: 'desc' }
+                });
+
+                productIds = [...productIds, ...relatedProducts.map(p => p.id)];
+            }
+        }
+
+        // 5. Fetch full product data and apply final filters
+        const whereClause: any = { id: { in: productIds }, isPublished: true };
+        if (genderFilter) whereClause.gender = genderFilter;
+        if (isSaleValue) whereClause.priceDiscount = { not: null };
+
+        const fullProducts = await this.prisma.product.findMany({
+            where: whereClause,
+            include: { sizeStocks: true }
         });
 
-        productIds = [...productIds, ...relatedProducts.map((p) => p.id)];
-      }
+        // Preserve order by productIds (relevance)
+        const sortedResults = productIds
+            .map(id => fullProducts.find(p => p.id === id))
+            .filter((p): p is NonNullable<typeof p> => !!p);
+
+        return sortedResults.map(product =>
+            this.transformProductImages(product)
+        );
     }
 
-    // 5. Fetch full product data and apply final filters
-    const whereClause: any = { id: { in: productIds }, isPublished: true };
-    if (genderFilter) whereClause.gender = genderFilter;
-    if (isSaleValue) whereClause.priceDiscount = { not: null };
+    async getSearchSuggestions(
+        q: string,
+        gender?: string,
+        isSale?: string
+    ): Promise<string[]> {
+        // Strip quotes from query parameters
+        const cleanQ = q ? q.replace(/^['"]|['"]$/g, '').trim() : '';
+        const cleanGender = gender
+            ? gender.replace(/^['"]|['"]$/g, '').trim()
+            : undefined;
 
-    const fullProducts = await this.prisma.product.findMany({
-      where: whereClause,
-      include: { sizeStocks: true },
-    });
+        if (!cleanQ) return [];
 
-    // Preserve order by productIds (relevance)
-    const sortedResults = productIds
-      .map((id) => fullProducts.find((p) => p.id === id))
-      .filter((p): p is NonNullable<typeof p> => !!p);
+        const where: any = {
+            isPublished: true,
+            name: {
+                contains: cleanQ,
+                mode: 'insensitive'
+            }
+        };
 
-    return sortedResults.map((product) => this.transformProductImages(product));
-  }
+        if (
+            cleanGender &&
+            ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
+        ) {
+            where.gender = cleanGender.toUpperCase();
+        }
 
-  async getSearchSuggestions(
-    q: string,
-    gender?: string,
-    isSale?: string
-  ): Promise<string[]> {
-    // Strip quotes from query parameters
-    const cleanQ = q ? q.replace(/^['"]|['"]$/g, '').trim() : '';
-    const cleanGender = gender
-      ? gender.replace(/^['"]|['"]$/g, '').trim()
-      : undefined;
+        // Filter by sale status
+        const isSaleValue = isSale
+            ? isSale
+                  .replace(/^['"]|['"]$/g, '')
+                  .trim()
+                  .toLowerCase()
+            : 'false';
 
-    if (!cleanQ) return [];
+        if (isSaleValue === 'true') {
+            where.priceDiscount = {
+                not: null
+            };
+        }
 
-    const where: any = {
-      isPublished: true,
-      name: {
-        contains: cleanQ,
-        mode: 'insensitive',
-      },
-    };
+        const products = await this.prisma.product.findMany({
+            where,
+            select: {
+                name: true
+            },
+            take: 10
+        });
 
-    if (
-      cleanGender &&
-      ['MALE', 'FEMALE', 'UNISEX'].includes(cleanGender.toUpperCase())
-    ) {
-      where.gender = cleanGender.toUpperCase();
+        return products.map(product => product.name);
+    }
+    async findOne(id: string) {
+        const product = await this.prisma.product.findUnique({ where: { id } });
+        if (!product) {
+            throw new NotFoundException('Product not found (VERIFY_UPDATE)');
+        }
+        // Transform images with CDN prefix
+        return this.transformProductImages(product);
+    }
+    async findOneBySlug(slug: string) {
+        const product = await this.prisma.product.findUnique({
+            where: { slug }
+        });
+        if (!product) {
+            throw new NotFoundException('Product not found (VERIFY_UPDATE)');
+        }
+        // Transform images with CDN prefix
+        return this.transformProductImages(product);
+    }
+    async getRelatedProducts(slug: string) {
+        const currentProduct = await this.prisma.product.findUnique({
+            where: { slug },
+            select: {
+                id: true,
+                gender: true,
+                priceCurrent: true,
+                category: true
+            }
+        });
+
+        if (!currentProduct) return [];
+
+        const whereClause: any = {
+            gender: currentProduct.gender,
+            id: { not: currentProduct.id },
+            isPublished: true
+        };
+
+        // Only filter by category if it exists
+        if (currentProduct.category) {
+            whereClause.category = currentProduct.category;
+        }
+
+        const related = await this.prisma.product.findMany({
+            where: whereClause,
+            take: 4,
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        // Transform images with CDN prefix
+        return related.map(product => this.transformProductImages(product));
     }
 
-    // Filter by sale status
-    const isSaleValue = isSale
-      ? isSale
-          .replace(/^['"]|['"]$/g, '')
-          .trim()
-          .toLowerCase()
-      : 'false';
+    async update(id: string, updateProductDto: UpdateProductDto) {
+        const product = await this.findOne(id);
 
-    if (isSaleValue === 'true') {
-      where.priceDiscount = {
-        not: null,
-      };
+        const {
+            name,
+            description,
+            priceCurrent,
+            priceOriginal,
+            priceDiscount,
+            badge,
+            gender,
+            isPublished,
+            sizeStocks,
+            images,
+            category
+        } = updateProductDto;
+
+        const data: any = {
+            description,
+            priceCurrent:
+                priceCurrent != null ? priceCurrent.toString() : undefined,
+            priceOriginal:
+                priceOriginal != null ? priceOriginal.toString() : undefined,
+            priceDiscount:
+                priceDiscount != null ? priceDiscount.toString() : undefined,
+            badge,
+            gender,
+            isPublished,
+            images,
+            category
+        };
+
+        if (name && name !== product.name) {
+            data.name = name;
+            data.slug = await this.generateUniqueSlug(name);
+        }
+
+        if (sizeStocks && Array.isArray(sizeStocks)) {
+            data.sizeStocks = {
+                deleteMany: {},
+                create: sizeStocks.map(s => ({
+                    size: s.size,
+                    stock: s.stock
+                }))
+            };
+        }
+
+        const updatedProduct = await this.prisma.product.update({
+            where: { id },
+            data,
+            include: { sizeStocks: true }
+        });
+
+        // Transform images with CDN prefix
+        const transformedProduct = this.transformProductImages(updatedProduct);
+
+        return {
+            success: true,
+            message: 'Product updated successfully',
+            data: transformedProduct
+        };
     }
 
-    const products = await this.prisma.product.findMany({
-      where,
-      select: {
-        name: true,
-      },
-      take: 10,
-    });
-
-    return products.map((product) => product.name);
-  }
-  async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product) {
-      throw new NotFoundException('Product not found (VERIFY_UPDATE)');
+    async remove(id: string) {
+        await this.findOne(id); // Check if exists
+        await this.prisma.product.delete({ where: { id } });
+        return {
+            success: true,
+            message: 'Product deleted successfully'
+        };
     }
-    // Transform images with CDN prefix
-    return this.transformProductImages(product);
-  }
-  async findOneBySlug(slug: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { slug },
-    });
-    if (!product) {
-      throw new NotFoundException('Product not found (VERIFY_UPDATE)');
-    }
-    // Transform images with CDN prefix
-    return this.transformProductImages(product);
-  }
-  async getRelatedProducts(slug: string) {
-    const currentProduct = await this.prisma.product.findUnique({
-      where: { slug },
-      select: {
-        id: true,
-        gender: true,
-        priceCurrent: true,
-        category: true,
-      },
-    });
-
-    if (!currentProduct) return [];
-
-    const whereClause: any = {
-      gender: currentProduct.gender,
-      id: { not: currentProduct.id },
-      isPublished: true,
-    };
-
-    // Only filter by category if it exists
-    if (currentProduct.category) {
-      whereClause.category = currentProduct.category;
-    }
-
-    const related = await this.prisma.product.findMany({
-      where: whereClause,
-      take: 4,
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    // Transform images with CDN prefix
-    return related.map((product) => this.transformProductImages(product));
-  }
-
-  async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.findOne(id);
-
-    const {
-      name,
-      description,
-      priceCurrent,
-      priceOriginal,
-      priceDiscount,
-      badge,
-      gender,
-      isPublished,
-      sizeStocks,
-      images,
-      category,
-    } = updateProductDto;
-
-    const data: any = {
-      description,
-      priceCurrent: priceCurrent != null ? priceCurrent.toString() : undefined,
-      priceOriginal:
-        priceOriginal != null ? priceOriginal.toString() : undefined,
-      priceDiscount:
-        priceDiscount != null ? priceDiscount.toString() : undefined,
-      badge,
-      gender,
-      isPublished,
-      images,
-      category,
-    };
-
-    if (name && name !== product.name) {
-      data.name = name;
-      data.slug = await this.generateUniqueSlug(name);
-    }
-
-    if (sizeStocks && Array.isArray(sizeStocks)) {
-      data.sizeStocks = {
-        deleteMany: {},
-        create: sizeStocks.map((s) => ({
-          size: s.size,
-          stock: s.stock,
-        })),
-      };
-    }
-
-    const updatedProduct = await this.prisma.product.update({
-      where: { id },
-      data,
-      include: { sizeStocks: true },
-    });
-
-    // Transform images with CDN prefix
-    const transformedProduct = this.transformProductImages(updatedProduct);
-
-    return {
-      success: true,
-      message: 'Product updated successfully',
-      data: transformedProduct,
-    };
-  }
-
-  async remove(id: string) {
-    await this.findOne(id); // Check if exists
-    await this.prisma.product.delete({ where: { id } });
-    return {
-      success: true,
-      message: 'Product deleted successfully',
-    };
-  }
 }

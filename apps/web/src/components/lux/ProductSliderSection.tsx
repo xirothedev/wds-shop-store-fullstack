@@ -26,6 +26,7 @@ export function ProductSliderSection({
     const delta = direction === 'left' ? -cardWidth : cardWidth;
     container.scrollBy({ left: delta, behavior: 'smooth' });
   };
+  
 
   return (
     <section className="mx-auto max-w-[1400px] overflow-hidden px-6 py-24">
@@ -87,7 +88,7 @@ export function ProductSliderSection({
         className="no-scrollbar flex gap-6 overflow-x-auto scroll-smooth px-4 pt-2 pb-12 md:px-0"
       >
         {products.map((product) => (
-          <ProductCard key={product.title} {...product} />
+          <ProductCard key={product.id} {...product} />
         ))}
       </div>
     </section>

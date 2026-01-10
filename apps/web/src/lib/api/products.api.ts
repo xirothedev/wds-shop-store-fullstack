@@ -5,8 +5,6 @@ import { apiClient } from './axios';
 interface ApiResponse<T> {
   success: boolean;
   data: T;
-  timestamp: string;
-  path: string;
 }
 
 export const getProducts = async (
@@ -46,6 +44,12 @@ export const getProductBySlug = async (slug: string): Promise<Product | undefine
 export const getRelatedProducts = async (slug: string): Promise<Product[]> => {
   const response = await apiClient.get<ApiResponse<Product[]>>(
     `/api/products/related/${slug}`
+  );
+  return response.data.data;
+};
+export const getFeaturedProducts = async (): Promise<Product[]> => {
+  const response = await apiClient.get<ApiResponse<Product[]>>(
+    `/api/products/featured`
   );
   return response.data.data;
 }

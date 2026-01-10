@@ -4,6 +4,7 @@ import {
     getProductBySlug as getProductBySlugApi,
     getProducts,
     getRelatedProducts as getRelatedProductsApi,
+    getFeaturedProducts as getFeaturedProductsApi,
 } from './api/products.api';
 
 /**
@@ -681,6 +682,18 @@ export async function getRelatedProducts(slug: string): Promise<Product[]> {
     return related.map(transformProductFromApi);
   } catch (error) {
     console.error('Error in getRelatedProducts:', error);
+    return [];
+  }
+}
+export async function getFeaturedProducts(): Promise<Product[]> {
+  try {
+    const featured = await getFeaturedProductsApi();
+    if (!featured || !Array.isArray(featured)) {
+      return [];
+    }
+    return featured.map(transformProductFromApi);
+  } catch (error) {
+    console.error('Error in getFeaturedProducts:', error);
     return [];
   }
 }
