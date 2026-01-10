@@ -13,6 +13,8 @@ import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { CsrfService } from './common/services/csrf.service';
 import { MailModule } from './mail/mail.module';
+import { OrdersModule } from './orders/orders.module';
+import { PaymentModule } from './payment/payment.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 import { StorageModule } from './storage/storage.module';
@@ -23,6 +25,8 @@ import { StorageModule } from './storage/storage.module';
     AuthModule,
     CartModule,
     MailModule,
+    OrdersModule,
+    PaymentModule,
     StorageModule,
     ProductsModule,
     ConfigModule.forRoot({
