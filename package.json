@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@nestjs/mapped-types": "*"
+    "@nestjs/cqrs": "^11.0.3"
   },
   "name": "wds-shop-store-fullstack",
   "private": true,
@@ -37,9 +37,5 @@
     "**/*.{json,md,css}": [
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "@nestjs/cqrs": "^11.0.3",
-    "react-use": "^17.6.0"
   }
 }
