@@ -5,6 +5,7 @@ export const navLinks: NavLink[] = [
   { label: 'Nam', href: '/products?gender=MALE' },
   { label: 'Nữ', href: '/products?gender=FEMALE' },
   { label: 'Giảm giá', href: '/products?sale=true' },
+  { label: 'Đơn hàng', href: '/orders' },
 ];
 
 export const featuredProducts: ProductCardProps[] = [
