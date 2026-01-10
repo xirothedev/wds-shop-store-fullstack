@@ -1,0 +1,3 @@
+-- Extensions already exist in database (pg_trgm, unaccent)
+-- This migration is a baseline - extensions were created directly in Neon
+-- No SQL needed as extensions already exist

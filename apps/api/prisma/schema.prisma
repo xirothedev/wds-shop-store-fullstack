@@ -12,7 +12,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [pg_trgm, unaccent]
 }
 
 enum UserRole {
@@ -71,11 +72,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  orders                Order[]
-  cart                  Cart? // 1 User has only 1 active cart
-  sessions              Session[] // Active sessions
+  orders                  Order[]
+  cart                    Cart? // 1 User has only 1 active cart
+  sessions                Session[] // Active sessions
   emailVerificationTokens EmailVerificationToken[]
-  passwordResetTokens   PasswordResetToken[]
+  passwordResetTokens     PasswordResetToken[]
 
   @@map("users")
 }
@@ -127,8 +128,8 @@ model CartItem {
   productSizeStockId String?
   productSizeStock   ProductSizeStock? @relation(fields: [productSizeStockId], references: [id])
 
-  size     String      @db.VarChar(10) // Product size
-  quantity Int         @default(1)
+  size     String @db.VarChar(10) // Product size
+  quantity Int    @default(1)
 
   @@unique([cartId, productId, size]) // A product + size can only appear once in a cart
   @@index([cartId])
@@ -252,7 +253,7 @@ model ProductSizeStock {
   stock Int    @default(0)
 
   productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems CartItem[]
 
   @@unique([productId, size]) // Each size of a product has only 1 record
