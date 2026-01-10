@@ -1,8 +1,8 @@
 import {
-  OrderStatus,
-  PaymentStatus,
   type Order,
   type OrderItem,
+  OrderStatus,
+  PaymentStatus,
   type PaymentTransaction,
   type Product,
   type ProductSizeStock,
@@ -96,7 +96,10 @@ export class OrdersService {
 
     const shippingFee = dto.shippingFee ?? 0;
     const discountValue = dto.discountValue ?? 0;
-    const totalAmount = Math.max(itemsSubtotal + shippingFee - discountValue, 0);
+    const totalAmount = Math.max(
+      itemsSubtotal + shippingFee - discountValue,
+      0
+    );
 
     const code = await this.generateOrderCode();
 

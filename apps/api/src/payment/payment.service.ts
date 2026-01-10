@@ -14,6 +14,7 @@ import { randomUUID } from 'crypto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthenticatedUser } from '../types/express';
+import { NullableJsonNullValueInput } from './../../generated/prisma/internal/prismaNamespaceBrowser';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
 
@@ -149,7 +150,7 @@ export class PaymentService {
         where: { id: transaction.id },
         data: {
           status,
-          payosData: payload ? JSON.parse(JSON.stringify(payload)) : null,
+          payosData: payload as unknown as NullableJsonNullValueInput,
         },
       }),
       this.prisma.order.update({
