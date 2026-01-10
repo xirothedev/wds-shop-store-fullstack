@@ -27,9 +27,9 @@ export const metadata: Metadata = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const search = searchParams.search;
+  const search = (await searchParams).search;
   const featuredProducts = await getFeaturedProducts();
 
   return (
