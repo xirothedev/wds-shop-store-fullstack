@@ -101,16 +101,6 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
-## Payment API (mock-friendly)
-
-- Không cần provider ngoài: luồng thanh toán dùng transaction code và webhook giả lập.
-- Endpoint chính:
-  - `POST /payments/orders/:orderId/initiate` (auth) – tạo/refresh transaction, trả về `transactionCode` và `paymentUrl` (mock).
-  - `GET /payments/orders/:orderId` (auth) – xem thông tin transaction của order.
-  - `POST /payments/webhook` (public) – cập nhật trạng thái từ provider (dùng trong mock).
-  - `POST /payments/webhook/simulate-paid/:transactionCode` (public) – tiện cho local, set trạng thái `PAID`.
-- Prereq: cần `orderId` tồn tại với `totalAmount` đã set. (Hiện chưa có endpoint tạo order; tạo tay qua DB/seed hoặc bổ sung checkout flow trước khi gọi initiate.)
-- Env: nên thiết lập `FRONTEND_URL` để `paymentUrl` fallback đúng (mặc định `http://localhost:3000`). Nếu muốn redirect mock, thêm query `returnUrl` khi initiate.
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
