@@ -10,7 +10,7 @@ import {
   getAllCartItem,
   updateCartItem,
 } from '@/lib/api/cart.api';
-import { CreateOrderDto, ordersApi } from '@/lib/api/orders.api';
+import { ordersApi } from '@/lib/api/orders.api';
 import { paymentApi } from '@/lib/api/payment.api';
 import { CartItem } from '@/types/product';
 
@@ -102,7 +102,7 @@ export function CartItemList() {
         checked
           ? new Map(
               query.data.map((item) => [
-                item.cartItemId,
+                item.size + '-' + item.cartItemId,
                 item.priceCurrent * item.quantity,
               ])
             )
@@ -113,7 +113,9 @@ export function CartItemList() {
 
   const allSelected = useMemo(() => {
     if (!query.data || query.data.length === 0) return false;
-    return query.data.every((item) => selectedItems.has(item.cartItemId));
+    return query.data.every((item) =>
+      selectedItems.has(item.size + '-' + item.cartItemId)
+    );
   }, [query.data, selectedItems]);
 
   const isIndeterminate = useMemo(() => {
@@ -131,20 +133,13 @@ export function CartItemList() {
           (item) => item.size + '-' + item.cartItemId === id
         );
         if (!cartItem) return null;
-        return {
-          productId: cartItem.id, // Assuming cartItem.id is the productId, adjust if needed
-          size: cartItem.size,
-          quantity: cartItem.quantity,
-        };
+        return { ...cartItem }; // Assuming cartItem.id is the productId, adjust if needed
       })
-      .filter(Boolean) as CreateOrderDto['items'];
+      .filter(Boolean);
 
-    const dto: CreateOrderDto = {
-      items,
-      // Add other fields if needed, e.g., shipping info
-    };
-
-    createOrderMutation.mutate(dto);
+    console.log(items);
+    localStorage.setItem('orderItems', JSON.stringify(items));
+    window.location.href = 'http://localhost:3000/orders/confirm';
   };
 
   return (
