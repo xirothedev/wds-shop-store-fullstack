@@ -20,6 +20,7 @@ export class OrdersController {
     @Body() dto: CreateOrderDto,
     @CurrentUser() user: AuthenticatedUser
   ) {
+    console.log(dto);
     return this.ordersService.createOrder(user, dto);
   }
 

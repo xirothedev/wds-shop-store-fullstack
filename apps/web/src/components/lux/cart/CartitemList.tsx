@@ -10,8 +10,6 @@ import {
   getAllCartItem,
   updateCartItem,
 } from '@/lib/api/cart.api';
-import { ordersApi } from '@/lib/api/orders.api';
-import { paymentApi } from '@/lib/api/payment.api';
 import { CartItem } from '@/types/product';
 
 import { CartItemCard } from './CartItemCard';
@@ -39,25 +37,6 @@ export function CartItemList() {
     onSuccess: async () => {
       await query.refetch();
       // console.log(query.isFetching);
-    },
-  });
-
-  const createOrderMutation = useMutation({
-    mutationFn: ordersApi.createOrder,
-    onSuccess: async (order) => {
-      // After creating order, initiate payment
-      const paymentResponse = await paymentApi.initiatePayment(order.id);
-      console.log(paymentResponse);
-
-      if (paymentResponse.transaction.paymentUrl) {
-        window.location.href = `http://localhost:3000/orders/confirm/${paymentResponse.orderId}`;
-      } else {
-        console.error('No payment URL received');
-      }
-    },
-    onError: (error) => {
-      console.error('Failed to create order:', error);
-      // Handle error, e.g., show toast
     },
   });
 
@@ -223,12 +202,10 @@ export function CartItemList() {
           <div className="flex w-full justify-end">
             <button
               type="submit"
-              disabled={
-                selectedItems.size === 0 || createOrderMutation.isPending
-              }
+              disabled={selectedItems.size === 0}
               className="rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl disabled:opacity-50"
             >
-              {createOrderMutation.isPending ? 'Đang xử lý...' : 'Đặt đơn'}
+              Đặt đơn
             </button>
           </div>
         </form>

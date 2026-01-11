@@ -31,7 +31,7 @@ export function OrderItemCard({ product }: CardInputProps) {
         </span>
       </div>
 
-      <div className="price-wrapper row-span-2 ml-2 flex h-full w-full flex-col justify-end text-left md:row-span-1 md:ml-0 md:justify-center md:text-center">
+      <div className="price-wrapper row-span-2 mb-4 ml-2 flex h-full w-full flex-col justify-end text-left md:row-span-1 md:ml-0 md:justify-center md:text-center">
         <p className="text-left md:text-center">
           {Math.round(product.priceCurrent) &&
             new Intl.NumberFormat('vi-VN', {
