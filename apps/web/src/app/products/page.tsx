@@ -10,6 +10,7 @@ import { getAllProducts } from '@/lib/products';
 import type { Product } from '@/types/product';
 
 import ProductsLoading from './loading';
+import FilterProduct from '@/components/lux/product/FilterProduct'; 
 
 const ITEMS_PER_PAGE = 12;
 
@@ -102,6 +103,7 @@ export function ProductsContent() {
   return (
     <>
       <LuxNavbar links={navLinks} cartCount={3} />
+     
       <ProductsLists
         isLoading={isLoading}
         products={products}

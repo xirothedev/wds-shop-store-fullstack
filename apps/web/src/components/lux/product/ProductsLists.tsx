@@ -8,6 +8,7 @@ import ProductsLoading from '@/app/products/loading';
 import { Product } from '@/types/product';
 
 import { ProductListCard } from './ProductListCard';
+import FilterProduct from './FilterProduct';
 
 type ProductsListsProps = {
   isLoading: boolean;
@@ -84,7 +85,7 @@ const ProductsLists = ({
       </div>
     )
   ) : (
-    <main className="min-h-screen pt-24">
+    <main className="min-h-screen pt-28">
       <div className="mx-auto max-w-7xl px-6 pb-16">
         {/* Header */}
         <div className="mb-12 text-center">
@@ -110,7 +111,8 @@ const ProductsLists = ({
                 : sale
                   ? 'Những sản phẩm đang được giảm giá'
                   : 'Khám phá bộ sưu tập giày thể thao cao cấp của chúng tôi'}
-          </p>
+            </p>
+             <FilterProduct />
         </div>
 
         {/* Products Grid with Infinite Scroll */}
@@ -136,7 +138,7 @@ const ProductsLists = ({
             </div>
           }
         >
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ]">
             {products.map((product) => (
               <ProductListCard key={product.id} product={product} />
             ))}

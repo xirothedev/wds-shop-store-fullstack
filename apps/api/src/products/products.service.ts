@@ -178,7 +178,10 @@ export class ProductsService {
   async searchProductsWithRelevance(
     query: string,
     gender?: string,
-    isSale?: string
+    isSale?: string,
+    sortBy?: string,
+    sortValue?: string,
+    orderBy?: string
   ) {
     // 1. Clean inputs
     const cleanQuery = query ? query.replace(/^['"]|['"]$/g, '').trim() : '';
@@ -200,14 +203,56 @@ export class ProductsService {
         : null;
 
     // If no search query, return filtered products
+    const now = new Date();
+
+// Hôm nay (tính từ 00:00:00)
+const startOfToday = new Date(now.setHours(0, 0, 0, 0));
+
+// Tuần này (tính từ đầu tuần, ví dụ Thứ 2)
+const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)));
+startOfWeek.setHours(0, 0, 0, 0);
+
+// Tháng này (tính từ ngày 1 đầu tháng)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Năm này (tính từ ngày 1 đầu năm)
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
     if (!cleanQuery) {
       const where: any = { isPublished: true };
       if (genderFilter) where.gender = genderFilter;
       if (isSaleValue) where.priceDiscount = { not: null };
-
+      const sortByField: object | any = () => {
+        switch (sortBy) {
+          case 'latest':
+            return { createdAt: orderBy === 'asc' ? 'asc' : 'desc' };
+          case 'appreciated':
+            return { ratingValue: orderBy === 'asc' ? 'asc' : 'desc' };
+          case 'trending':
+            return { ratingCount: orderBy === 'asc' ? 'asc' : 'desc' };
+          case "date":
+            switch (sortValue) {
+              case 'today':
+                return { createdAt: { gte: startOfToday } };
+              case 'week':
+                return { createdAt: { gte: startOfWeek } };
+              case 'month':
+                return { createdAt: { gte: startOfMonth } };
+              case 'year':
+                return { createdAt: { gte: startOfYear } };
+              default:
+                return { createdAt: orderBy === 'asc' ? 'asc' : 'desc' };
+            }
+          default:
+            return { sortBy: orderBy === 'asc' ? 'asc' : 'desc' };
+        }
+      }
+    
       const products = await this.prisma.product.findMany({
         where,
         include: { sizeStocks: true },
+        orderBy: sortByField(),
+       
       });
       return products.map((p) => this.transformProductImages(p));
     }

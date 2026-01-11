@@ -25,162 +25,196 @@ import { ProductsService } from './products.service';
 @ApiTags('Products')
 @Controller('/api/products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {
-    console.log('>>> ProductsController INITIALIZED');
-  }
-
-  @Public()
-  @Get('suggestions')
-  @ApiOperation({ summary: 'Get search suggestions' })
-  @ApiQuery({
-    name: 'gender',
-    required: false,
-    description: 'Filter by gender (MALE, FEMALE, UNISEX)',
-    enum: ['MALE', 'FEMALE', 'UNISEX'],
-  })
-  @ApiQuery({
-    name: 'isSale',
-    required: false,
-    description: 'Filter products on sale (true/false)',
-    type: Boolean,
-    example: false,
-  })
-  @ApiQuery({
-    name: 'q',
-    required: false,
-    description: 'Search term',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'List of suggestions',
-  })
-  async getSuggestions(
-    @Query('gender') gender?: string,
-    @Query('isSale') isSale?: string,
-    @Query('q') q?: string
-  ) {
-    return this.productsService.getSearchSuggestions(q || '', gender, isSale);
-  }
-
-  //create product
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  async create(@Body() createProductDto: CreateProductDto) {
-    const result = await this.productsService.create(createProductDto);
-    return result;
-  }
-  //get featrured products
-  @Public()
-  @Get('featured')
-  @ApiOperation({ summary: 'Get featured products' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of featured products',
-    type: [ProductDto],
-  })
-  async getFeaturedProducts() {
-    return this.productsService.getFeaturedProducts();
-  }
-
-  //get products and search
-  @Public()
-  @Get()
-  @ApiOperation({ summary: 'Get all products' })
-  @ApiQuery({
-    name: 'gender',
-    required: false,
-    description: 'Filter by gender (MALE, FEMALE, UNISEX)',
-    enum: ['MALE', 'FEMALE', 'UNISEX'],
-  })
-  @ApiQuery({
-    name: 'isSale',
-    required: false,
-    description: 'Filter products on sale (true/false)',
-    type: Boolean,
-    example: false,
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search term',
-    type: String,
-    example: 'shirt',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'List products',
-    type: [ProductDto],
-  })
-  async findAll(
-    @Query('gender') gender?: string,
-    @Query('isSale') isSale?: string,
-    @Query('search') search?: string
-  ) {
-    // If search query provided, delegate to relevance search
-    if (search && String(search).trim() !== '') {
-      return this.productsService.searchProductsWithRelevance(
-        search,
-        gender,
-        isSale
-      );
+    constructor(private readonly productsService: ProductsService) {
+        console.log('>>> ProductsController INITIALIZED');
     }
 
-    return this.productsService.findAll(gender, isSale);
-  }
+    @Public()
+    @Get('suggestions')
+    @ApiOperation({ summary: 'Get search suggestions' })
+    @ApiQuery({
+        name: 'gender',
+        required: false,
+        description: 'Filter by gender (MALE, FEMALE, UNISEX)',
+        enum: ['MALE', 'FEMALE', 'UNISEX']
+    })
+    @ApiQuery({
+        name: 'isSale',
+        required: false,
+        description: 'Filter products on sale (true/false)',
+        type: Boolean,
+        example: false
+    })
+    @ApiQuery({
+        name: 'q',
+        required: false,
+        description: 'Search term',
+        type: String
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'List of suggestions'
+    })
+    async getSuggestions(
+        @Query('gender') gender?: string,
+        @Query('isSale') isSale?: string,
+        @Query('q') q?: string
+    ) {
+        return this.productsService.getSearchSuggestions(
+            q || '',
+            gender,
+            isSale
+        );
+    }
 
-  //get product by slug
-  @Public()
-  @Get('slug/:slug')
-  @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
-  findOneBySlug(@Param('slug') slug: string) {
-    return this.productsService.findOneBySlug(slug);
-  }
-  //get related products
-  @Public()
-  @Get('related/:slug')
-  @ApiResponse({
-    status: 200,
-    description: 'Get related products',
-    type: [ProductDto],
-  })
-  getRelatedProducts(@Param('slug') slug: string) {
-    return this.productsService.getRelatedProducts(slug);
-  }
-  //get product by id
-  @Public()
-  @Get(':id')
-  @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
-  findOne(@Param('id') id: string) {
-    console.log('>>> findOne CALLED with id:', id);
-    return this.productsService.findOne(id);
-  }
-  @Patch(':id')
-  @Public()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Update product' })
-  @ApiResponse({
-    status: 200,
-    description: 'Product updated successfully',
-    type: ProductDto,
-  })
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(id, updateProductDto);
-  }
+    //create product
+    @Post()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    async create(@Body() createProductDto: CreateProductDto) {
+        const result = await this.productsService.create(createProductDto);
+        return result;
+    }
+    //get featrured products
+    @Public()
+    @Get('featured')
+    @ApiOperation({ summary: 'Get featured products' })
+    @ApiResponse({
+        status: 200,
+        description: 'List of featured products',
+        type: [ProductDto]
+    })
+    async getFeaturedProducts() {
+        return this.productsService.getFeaturedProducts();
+    }
 
-  //delete product
-  @Delete(':id')
-  @Public()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Delete product' })
-  @ApiResponse({
-    status: 200,
-    description: 'Product deleted successfully',
-  })
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
-  }
+    //get products and search
+    @Public()
+    @Get()
+    @ApiOperation({ summary: 'Get all products' })
+    @ApiQuery({
+        name: 'gender',
+        required: false,
+        description: 'Filter by gender (MALE, FEMALE, UNISEX)',
+        enum: ['MALE', 'FEMALE', 'UNISEX']
+    })
+    @ApiQuery({
+        name: 'isSale',
+        required: false,
+        description: 'Filter products on sale (true/false)',
+        type: Boolean,
+        example: false
+    })
+    @ApiQuery({
+        name: 'search',
+        required: false,
+        description: 'Search term',
+        type: String,
+        example: 'shirt'
+    })
+    @ApiQuery({
+        name: 'sortBy',
+        required: false,
+        description: 'Sort criteria (e.g., latest, appreciated, trending)',
+        type: String,
+        example: 'latest'
+    })
+    @ApiQuery({
+        name: 'sortValue',
+        required: false,
+        description:
+            'Filter with value (e.g., today,week,month,year,m,,l,xl...)',
+        type: String
+    })
+    @ApiQuery({
+        name: 'orderBy',
+        required: false,
+        description: 'Order direction (asc or desc)',
+        type: String,
+        example: 'asc'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'List products',
+        type: [ProductDto]
+    })
+    async findAll(
+        @Query('gender') gender?: string,
+        @Query('isSale') isSale?: string,
+      @Query('search') search?: string,
+        @Query('sortBy') sortBy?: string,
+        @Query('sortValue') sortValue?: string,
+        @Query('orderBy') orderBy?: string
+    ) {
+        // If search query provided, delegate to relevance search
+        if (search && String(search).trim() !== '') {
+            return this.productsService.searchProductsWithRelevance(
+                search,
+                gender,
+              isSale,
+                sortBy,
+                sortValue,
+                orderBy
+            );
+        }
+
+        return this.productsService.findAll(gender, isSale, sortBy, sortValue, orderBy);
+    }
+
+    //get product by slug
+    @Public()
+    @Get('slug/:slug')
+    @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
+    findOneBySlug(@Param('slug') slug: string) {
+        return this.productsService.findOneBySlug(slug);
+    }
+    //get related products
+    @Public()
+    @Get('related/:slug')
+    @ApiResponse({
+        status: 200,
+        description: 'Get related products',
+        type: [ProductDto]
+    })
+    getRelatedProducts(@Param('slug') slug: string) {
+        return this.productsService.getRelatedProducts(slug);
+    }
+    //get product by id
+    @Public()
+    @Get(':id')
+    @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
+    findOne(@Param('id') id: string) {
+        console.log('>>> findOne CALLED with id:', id);
+        return this.productsService.findOne(id);
+    }
+    @Patch(':id')
+    @Public()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Update product' })
+    @ApiResponse({
+        status: 200,
+        description: 'Product updated successfully',
+        type: ProductDto
+    })
+    update(
+        @Param('id') id: string,
+        @Body() updateProductDto: UpdateProductDto
+    ) {
+        return this.productsService.update(id, updateProductDto);
+    }
+
+    //delete product
+    @Delete(':id')
+    @Public()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Delete product' })
+    @ApiResponse({
+        status: 200,
+        description: 'Product deleted successfully'
+    })
+    remove(@Param('id') id: string) {
+        return this.productsService.remove(id);
+    }
 }
