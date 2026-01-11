@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import {
   CartItemEditRequestDto,
@@ -10,6 +10,8 @@ import {
   getAllCartItem,
   updateCartItem,
 } from '@/lib/api/cart.api';
+import { CreateOrderDto, ordersApi } from '@/lib/api/orders.api';
+import { paymentApi } from '@/lib/api/payment.api';
 import { CartItem } from '@/types/product';
 
 import { CartItemCard } from './CartItemCard';
@@ -36,7 +38,26 @@ export function CartItemList() {
     mutationFn: updateCartItem,
     onSuccess: async () => {
       await query.refetch();
-      console.log(query.isFetching);
+      // console.log(query.isFetching);
+    },
+  });
+
+  const createOrderMutation = useMutation({
+    mutationFn: ordersApi.createOrder,
+    onSuccess: async (order) => {
+      // After creating order, initiate payment
+      const paymentResponse = await paymentApi.initiatePayment(order.id);
+      console.log(paymentResponse);
+
+      if (paymentResponse.transaction.paymentUrl) {
+        window.location.href = `http://localhost:3000/orders/confirm/${paymentResponse.orderId}`;
+      } else {
+        console.error('No payment URL received');
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to create order:', error);
+      // Handle error, e.g., show toast
     },
   });
 
@@ -49,7 +70,7 @@ export function CartItemList() {
   }, [selectedItems]);
 
   const handleSelectItem = (itemId: string, amount: number) => {
-    console.log(1);
+    console.log(itemId);
     setSelectedItems((prev) => {
       const newSet = new Map(prev);
       if (newSet.has(itemId)) {
@@ -100,8 +121,30 @@ export function CartItemList() {
     return selectedItems.size > 0 && selectedItems.size < query.data.length;
   }, [query.data, selectedItems]);
 
-  const handlePayment = () => {
-    console.log('PAYMENT', Array.from(selectedItems));
+  const handlePayment = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (selectedItems.size === 0) return;
+
+    const items = Array.from(selectedItems)
+      .map(([id, _amount]) => {
+        const cartItem = query.data?.find(
+          (item) => item.size + '-' + item.cartItemId === id
+        );
+        if (!cartItem) return null;
+        return {
+          productId: cartItem.id, // Assuming cartItem.id is the productId, adjust if needed
+          size: cartItem.size,
+          quantity: cartItem.quantity,
+        };
+      })
+      .filter(Boolean) as CreateOrderDto['items'];
+
+    const dto: CreateOrderDto = {
+      items,
+      // Add other fields if needed, e.g., shipping info
+    };
+
+    createOrderMutation.mutate(dto);
   };
 
   return (
@@ -124,7 +167,7 @@ export function CartItemList() {
       {query.data && !query.isLoading && (
         <form
           className="flex w-full flex-col items-center gap-4"
-          onSubmit={handlePayment}
+          onSubmit={(e) => handlePayment(e)}
         >
           <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center font-medium md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
             <div className="flex justify-center">
@@ -153,11 +196,13 @@ export function CartItemList() {
           <div className="flex w-full max-w-7xl flex-col gap-4">
             {query.data.map((product: CartItem) => (
               <CartItemCard
-                key={product.cartItemId}
+                key={product.size + '-' + product.cartItemId}
                 product={product}
                 deleteItem={deleteItem.mutate}
                 editItem={editItem.mutate}
-                isSelected={selectedItems.has(product.cartItemId)}
+                isSelected={selectedItems.has(
+                  product.size + '-' + product.cartItemId
+                )}
                 onSelect={handleSelectItem}
                 deleteSelectedItem={deleteSelectedItem}
                 isUpdating={query.isFetching}
@@ -183,10 +228,12 @@ export function CartItemList() {
           <div className="flex w-full justify-end">
             <button
               type="submit"
-              disabled={selectedItems.size === 0}
-              className="rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl"
+              disabled={
+                selectedItems.size === 0 || createOrderMutation.isPending
+              }
+              className="rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl disabled:opacity-50"
             >
-              Thanh Toán
+              {createOrderMutation.isPending ? 'Đang xử lý...' : 'Đặt đơn'}
             </button>
           </div>
         </form>

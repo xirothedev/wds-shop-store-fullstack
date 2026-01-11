@@ -27,6 +27,27 @@ export class CartService {
     private readonly config: ConfigService
   ) {}
 
+  async getSmallestSize(productId: string): Promise<string> {
+    const stockSize = await this.prisma.productSizeStock.findMany({
+      where: {
+        stock: {
+          gte: 1,
+        },
+        productId,
+      },
+
+      orderBy: {
+        size: 'asc',
+      },
+    });
+
+    if (stockSize.length === 0) {
+      throw Error(`There are no item of this id left in the stock`);
+    }
+
+    return stockSize[0].size;
+  }
+
   async getUserIdFromToken(token: string) {
     let userData: userData;
     try {
@@ -152,7 +173,7 @@ export class CartService {
     const newItem = await this.prisma.cartItem.create({
       data: {
         productId: item.productId,
-        size: item.size,
+        size: item.size as string,
         cartId: item.cartId,
         quantity: item.quantity,
         productSizeStockId: inStock.id,

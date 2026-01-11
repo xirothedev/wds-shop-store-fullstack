@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -47,7 +39,7 @@ export class OrdersController {
     summary: 'Get order details by ID',
   })
   getOrder(
-    @Param('orderId', new ParseUUIDPipe()) orderId: string,
+    @Param('orderId') orderId: string,
     @CurrentUser() user: AuthenticatedUser
   ) {
     return this.ordersService.getOrderById(orderId, user);

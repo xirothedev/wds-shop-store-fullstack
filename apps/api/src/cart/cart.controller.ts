@@ -59,6 +59,9 @@ export class CartController {
     @Body() item: ItemRequestDto,
     @Cookies('access_token') token: string
   ) {
+    if (!item.size) {
+      item.size = await this.cart.getSmallestSize(item.productId);
+    }
     item.cartId = await this.cart.getCartIdFromToken(token);
     return this.cart.addItem(item);
   }

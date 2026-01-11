@@ -34,7 +34,7 @@ export default async function Home({
 
   return (
     <>
-      <LuxNavbar links={navLinks} cartCount={3} />
+      <LuxNavbar links={navLinks} />
       {search ? (
         <ProductsContent />
       ) : (

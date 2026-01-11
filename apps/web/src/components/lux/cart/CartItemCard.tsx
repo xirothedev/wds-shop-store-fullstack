@@ -40,6 +40,7 @@ export function CartItemCard({
 }: CardInputProps) {
   const [quantity, setQuantity] = useState(product.quantity);
   const [pendingQuantity, setPendingQuantity] = useState<number | null>(null);
+  const [buttonDisable, setDisable] = useState<boolean>(false);
 
   useDebounce(
     async () => {
@@ -50,15 +51,18 @@ export function CartItemCard({
         quantity !== product.quantity &&
         pendingQuantity === quantity
       ) {
+        setDisable(true);
         const obj: CartItemEditRequestDto = {
           id: product.cartItemId,
           productId: product.id,
           quantity: quantity,
           size: product.size,
         };
+        console.log(obj);
         editItem(obj);
         onSelect(product.cartItemId, 0);
         onSelect(product.cartItemId, quantity * product.priceCurrent);
+        setDisable(false);
       }
     },
     300,
@@ -71,19 +75,23 @@ export function CartItemCard({
   }, [product.quantity]);
 
   return (
-    <div className="grid w-full grid-cols-[10%_30%_40%_20%] grid-rows-[50%_20%_30%] items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:grid-rows-1">
+    <div className="grid w-full grid-cols-[15%_30%_35%_20%] grid-rows-[50%_20%_30%] items-center overflow-hidden rounded-xl bg-white/5 px-2 py-4 text-center md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:grid-rows-1 md:p-4">
       <div className="row-span-3 flex justify-center md:col-span-1 md:row-span-1">
         <label
-          htmlFor={`select-${product.id + product.size}`}
+          htmlFor={`select-${product.size + '-' + product.id}`}
           className="group cursor-pointer"
         >
           <input
             type="checkbox"
-            id={`select-${product.id + product.size}`}
+            id={`select-${product.size + '-' + product.id}`}
             className="peer sr-only"
+            name={`select-${product.size + '-' + product.id}`}
             checked={isSelected}
             onChange={() =>
-              onSelect(product.cartItemId, quantity * product.priceCurrent)
+              onSelect(
+                product.size + '-' + product.cartItemId,
+                quantity * product.priceCurrent
+              )
             }
           />
           <div className="h-6 w-6 rounded-xs bg-white/10 *:hidden peer-checked:bg-amber-500 peer-checked:*:block">
@@ -96,9 +104,9 @@ export function CartItemCard({
         <Image
           alt="product image"
           src={product.images?.at(0)?.src as string}
-          width={200}
-          height={200}
-          className="rounded-2xl"
+          width={300}
+          height={300}
+          className="aspect-square rounded-2xl"
         />
       </div>
 
@@ -129,13 +137,20 @@ export function CartItemCard({
               setQuantity(Math.max(0, newQty));
               setPendingQuantity(Math.max(0, newQty));
             }}
-            disabled={isUpdating}
-            className="h-8 w-8 cursor-pointer select-none disabled:opacity-50"
+            disabled={buttonDisable || isUpdating}
+            className="h-8 w-8 cursor-pointer rounded-tl-xl rounded-bl-xl select-none hover:bg-amber-500 disabled:opacity-50"
           >
             <FaMinus className="m-auto h-2 w-2" />
           </button>
 
-          <p className="w-8 text-center select-none">{quantity}</p>
+          <p className="w-8 text-center select-none">
+            <input
+              className="m-0 w-full p-0"
+              disabled
+              name={`quantity-${product.size + '-' + product.id}`}
+              value={quantity}
+            />
+          </p>
 
           <button
             onClick={() => {
@@ -144,8 +159,8 @@ export function CartItemCard({
               setPendingQuantity(Math.min(newQty, product.stock));
             }}
             type="button"
-            className="h-8 w-8 cursor-pointer select-none disabled:opacity-50"
-            disabled={isUpdating}
+            className="h-8 w-8 cursor-pointer rounded-tr-xl rounded-br-xl select-none hover:bg-amber-500 disabled:opacity-50"
+            disabled={buttonDisable || isUpdating}
           >
             <FaPlus className="m-auto h-2 w-2" />
           </button>
@@ -173,7 +188,9 @@ export function CartItemCard({
               quantity * product.priceCurrent
             );
           }}
-          disabled={product.cartItemId === undefined || isUpdating}
+          disabled={
+            product.cartItemId === undefined || isUpdating || buttonDisable
+          }
           className="w-full cursor-pointer text-right hover:text-red-500 disabled:opacity-50 md:text-center"
         >
           Xóa

@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import { getNumberOfCartItem } from '@/lib/api/cart.api';
 
 import { Button } from './Button';
 import SearchPopover from './SearchPopover';
@@ -10,11 +12,15 @@ import { type NavLink } from './types';
 
 type LuxNavbarProps = {
   links: NavLink[];
-  cartCount?: number;
 };
 
-export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
+export function LuxNavbar({ links }: LuxNavbarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [cartNumber, setCartNumber] = useState(0);
+
+  useEffect(() => {
+    getNumberOfCartItem().then((num) => setCartNumber(num));
+  }, []);
 
   return (
     <>
@@ -31,8 +37,8 @@ export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
               height={0}
               className="mr-2 h-7 w-7"
             />
-            <span className="text-white">LUX</span>
-            <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+            <span className="hidden text-white md:block">LUX</span>
+            <span className="hidden bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent md:block">
               SNEAKERS
             </span>
             <span className="sr-only">Trang chủ</span>
@@ -73,29 +79,31 @@ export function LuxNavbar({ links, cartCount = 0 }: LuxNavbarProps) {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </Button>
-            <Button variant="ghost" className="relative p-1.5">
-              <span className="sr-only">Giỏ hàng</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="8" cy="21" r="1" />
-                <circle cx="19" cy="21" r="1" />
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-              </svg>
-              {cartCount > 0 ? (
-                <span className="absolute -top-0.5 -right-0.5 rounded-full bg-amber-500 px-1 text-[9px] leading-none font-bold text-black">
-                  {cartCount}
-                </span>
-              ) : null}
-            </Button>
+            <a href="http://localhost:3000/cart">
+              <Button variant="ghost" className="relative p-1.5">
+                <span className="sr-only">Giỏ hàng</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="8" cy="21" r="1" />
+                  <circle cx="19" cy="21" r="1" />
+                  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                </svg>
+                {cartNumber > 0 ? (
+                  <span className="absolute -top-0.5 -right-0.5 rounded-full bg-amber-500 px-1 text-[9px] leading-none font-bold text-black">
+                    {cartNumber}
+                  </span>
+                ) : null}
+              </Button>
+            </a>
           </div>
         </div>
       </nav>

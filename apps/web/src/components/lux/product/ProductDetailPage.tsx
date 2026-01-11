@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 
 import { Breadcrumb } from '@/components/lux/Breadcrumb';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
+import { addCartItem, CartItemAddRequestDto } from '@/lib/api/cart.api';
 import type { Product, ProductImage } from '@/types/product';
 
 import { ProductDetailsTabs } from './ProductDetailsTabs';
@@ -45,13 +46,13 @@ export function ProductDetailPage({
 
   const handleAddToCart = () => {
     // Tạm thời chỉ log ra console để chuẩn bị tích hợp store giỏ hàng
-    console.log('ADD_TO_CART', {
+    const obj: CartItemAddRequestDto = {
       productId: product.id,
-      productSlug: product.slug,
-      productName: product.name,
       size: selectedSizeId,
-      quantity,
-    });
+      quantity: quantity,
+    };
+
+    addCartItem(obj);
   };
 
   const getMaxQuantity = () => {

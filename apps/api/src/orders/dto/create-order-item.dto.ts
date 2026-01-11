@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export class CreateOrderItemDto {
   @ApiProperty({
     description: 'Product ID',
     example: 'c0f0f3c5-6c5b-4f31-9f0d-4b8d2c8a0e2a',
   })
-  @IsUUID('4', { message: 'productId must be a valid UUID' })
+  @IsString()
   productId: string;
 
   @ApiProperty({
