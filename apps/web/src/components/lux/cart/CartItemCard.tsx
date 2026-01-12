@@ -145,7 +145,7 @@ export function CartItemCard({
 
           <p className="w-8 text-center select-none">
             <input
-              className="m-0 w-full p-0"
+              className="m-0 w-full p-0 text-center"
               disabled
               name={`quantity-${product.size + '-' + product.id}`}
               value={quantity}

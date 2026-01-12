@@ -203,7 +203,7 @@ export function CartItemList() {
             <button
               type="submit"
               disabled={selectedItems.size === 0}
-              className="rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl disabled:opacity-50"
+              className="cursor-pointer rounded-xl border-2 border-amber-500 from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl font-bold text-amber-500 hover:bg-linear-to-r hover:text-white disabled:opacity-50"
             >
               Đặt đơn
             </button>

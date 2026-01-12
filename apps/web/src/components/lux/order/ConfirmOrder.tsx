@@ -42,7 +42,7 @@ export function ConfirmOrder() {
       console.log(paymentResponse);
 
       if (paymentResponse.transaction.paymentUrl) {
-        window.location.href = paymentResponse.transaction.paymentUrl;
+        window.location.href = 'http://localhost:3000/orders/confirm/success';
       } else {
         console.error('No payment URL received');
       }
@@ -50,6 +50,7 @@ export function ConfirmOrder() {
     onError: (error) => {
       console.error('Failed to create order:', error);
       // Handle error, e.g., show toast
+      window.location.href = 'http://localhost:3000/orders/confirm/failed';
     },
   });
 
@@ -93,7 +94,7 @@ export function ConfirmOrder() {
     <>
       {data && (
         <form onSubmit={handleSubmit}>
-          <h1 className="mt-8 mb-8 text-center">
+          <h1 className="mb-8 text-center">
             <span className="text-center text-4xl font-bold">THÔNG TIN </span>
             <span className="text-centers bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-4xl font-bold text-transparent">
               GIAO HÀNG
@@ -206,7 +207,7 @@ export function ConfirmOrder() {
           <div className="flex w-full justify-end">
             <button
               type="submit"
-              className="cursor-pointer rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl disabled:opacity-50"
+              className="cursor-pointer rounded-xl border-2 border-amber-500 from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl font-bold text-amber-500 hover:bg-linear-to-r hover:text-white disabled:opacity-50"
             >
               Xác nhận và Đặt đơn
             </button>

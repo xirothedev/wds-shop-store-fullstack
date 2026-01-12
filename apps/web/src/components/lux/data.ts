@@ -1,7 +1,7 @@
 import type { NavLink, StatItem } from './types';
 
 export const navLinks: NavLink[] = [
-  { label: 'Bộ sưu tập', href: 'products' },
+  { label: 'Bộ sưu tập', href: '/products' },
   { label: 'Nam', href: '/products?gender=MALE' },
   { label: 'Nữ', href: '/products?gender=FEMALE' },
   { label: 'Giảm giá', href: '/products?sale=true' },
