@@ -178,7 +178,7 @@ export function CartItemCard({
         </p>
       </div>
 
-      <div className="delete-button-wrapper">
+      <div className="delete-button-wrapper flex h-full w-full items-end md:items-center">
         <button
           type="button"
           onClick={() => {

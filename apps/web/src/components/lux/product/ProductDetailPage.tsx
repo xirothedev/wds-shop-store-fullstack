@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { Breadcrumb } from '@/components/lux/Breadcrumb';
@@ -21,6 +22,7 @@ export function ProductDetailPage({
   product,
   related,
 }: ProductDetailPageProps) {
+  const router = useRouter();
   const [selectedImageId, setSelectedImageId] = useState<string | undefined>(
     product.images?.[0]?.id
   );
@@ -45,7 +47,16 @@ export function ProductDetailPage({
     images.find((image) => image.id === selectedImageId) ?? images[0];
 
   const handleAddToCart = () => {
-    // Tạm thời chỉ log ra console để chuẩn bị tích hợp store giỏ hàng
+    const token = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('access_token='))
+      ?.split('=')[1];
+
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+
     const obj: CartItemAddRequestDto = {
       productId: product.id,
       size: selectedSizeId,

@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -184,7 +185,20 @@ export function CartItemList() {
             ))}
             {query.data.length === 0 && (
               <div className="grid h-50 items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
-                <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+                <span>
+                  <p className="font-bold">
+                    Trong giỏ hàng của bạn không có sản phẩm.
+                  </p>
+                  <p className="font-bold">
+                    Đến trang{' '}
+                    <Link
+                      href="/products"
+                      className="text-amber-500 hover:text-amber-700"
+                    >
+                      Bộ sưu tập
+                    </Link>
+                  </p>
+                </span>
               </div>
             )}
           </div>
