@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '../Button';
 import FilterPopup from './FilterPopup';
 
-type SortOption = 'latest' | 'trending' | 'related' | 'price' | 'discount';
+type SortOption = 'latest' | 'trending' | 'appreciated' | "";
 
 interface FilterOption {
   id: SortOption;
@@ -14,18 +15,26 @@ interface FilterOption {
 }
 
 const FilterProduct = () => {
-  const [activeSort, setActiveSort] = useState<SortOption>('latest');
-    const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [open, setOpen] = useState(false);
+  
   const filterOptions: FilterOption[] = [
     { id: 'appreciated', label: 'Đánh giá tốt' },
     { id: 'latest', label: 'Mới Nhất' },
     { id: 'trending', label: 'Bán Chạy', isHighlight: true },
-  
   ];
-
+  
+  const activeSort = searchParams.get('sortBy') as SortOption;
+  
   const handleFilterChange = (sortId: SortOption) => {
-    setActiveSort(sortId);
-    // TODO: Implement filter/sort logic
+ 
+    const params = new URLSearchParams(searchParams);
+    params.delete('sortBy');
+    params.delete('sortValue');
+    params.delete('orderBy');
+    params.set('sortBy', sortId);
+    router.push(`?${params.toString()}`);
   };
 
   return (

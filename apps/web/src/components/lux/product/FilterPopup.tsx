@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { set } from 'react-hook-form';
+import { useRouter, useSearchParams } from 'next/dist/client/components/navigation';
+import { useSearchParam } from 'react-use';
 
 interface FilterPopupProps {
   isOpen?: boolean;
@@ -47,17 +49,28 @@ const FilterPopup = ({ isOpen ,setOpen}: FilterPopupProps) => {
    
   ];
 
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
+  
  
-
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
  
 
   const handleFilterSelect = (filterId: string, value: string) => {
-    setSelectedFilters(() => ({
-     
-      [filterId]: value,
-    }));
-      console.log('Selected Filters:', selectedFilters)
+    const params = new URLSearchParams(searchParams);
+    params.delete('sortBy');
+    params.delete('sortValue');
+    params.delete('orderBy');
+    params.set('sortBy', filterId);
+   
+    if (filterId === 'priceCurrent' || filterId === 'name') {
+      params.set('orderBy', value);
+    } else {
+      params.set('sortValue', value);
+    }
+   
+    router.push(`?${params.toString()}`);
+    setOpen?.(false);
   };
 
  

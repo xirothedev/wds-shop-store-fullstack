@@ -16,6 +16,14 @@ type ProductsListsProps = {
   router: any;
   loadMoreProducts: () => void;
   hasMore: boolean;
+  filters: {
+    gender?: 'MALE' | 'FEMALE' | 'UNISEX' | null;
+    sale?: boolean;
+    search?: string | null;
+    sortBy?: string;
+    sortValue?: string;
+    orderBy?:string;
+  };
 };
 const ProductsLists = ({
   isLoading,
@@ -23,27 +31,12 @@ const ProductsLists = ({
   router,
   loadMoreProducts,
   hasMore,
+ 
+  filters
 }: ProductsListsProps) => {
-  const searchParams = useSearchParams();
+ 
 
-  // Get filters from URL params
-  const gender = searchParams.get('gender') as
-    | 'MALE'
-    | 'FEMALE'
-    | 'UNISEX'
-    | null;
-  const sale = searchParams.get('sale') === 'true';
-  const search = searchParams.get('search');
-
-  // Memoize filters
-  const filters = useMemo(
-    () => ({
-      ...(gender && { gender }),
-      ...(sale && { sale: true }),
-      ...(search && { search }),
-    }),
-    [gender, sale, search]
-  );
+ 
   return products.length === 0 ? (
     isLoading ? (
       <ProductsLoading />
@@ -92,11 +85,11 @@ const ProductsLists = ({
           <h1 className="mb-4 text-5xl font-bold">
             {filters.search
               ? `Kết quả tìm kiếm `
-              : gender === 'MALE'
+              : filters.gender === 'MALE'
                 ? 'GIÀY NAM'
-                : gender === 'FEMALE'
+                : filters.gender === 'FEMALE'
                   ? 'GIÀY NỮ'
-                  : sale
+                  : filters.sale
                     ? 'SẢN PHẨM GIẢM GIÁ'
                     : 'TẤT CẢ'}{' '}
             <span className="bg-linear-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
@@ -104,11 +97,11 @@ const ProductsLists = ({
             </span>
           </h1>
           <p className="text-gray-400">
-            {gender === 'MALE'
+            {filters.gender === 'MALE'
               ? 'Bộ sưu tập giày thể thao dành cho nam'
-              : gender === 'FEMALE'
+              : filters.gender === 'FEMALE'
                 ? 'Bộ sưu tập giày thể thao dành cho nữ'
-                : sale
+                : filters.sale
                   ? 'Những sản phẩm đang được giảm giá'
                   : 'Khám phá bộ sưu tập giày thể thao cao cấp của chúng tôi'}
             </p>

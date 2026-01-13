@@ -30,15 +30,20 @@ export function ProductsContent() {
     | null;
   const sale = searchParams.get('sale') === 'true';
   const search = searchParams.get('search');
-
+  const sortBy = searchParams.get('sortBy');
+  const sortValue = searchParams.get('sortValue');
+  const orderBy = searchParams.get('orderBy');
   // Memoize filters to prevent infinite loops
   const filters = useMemo(
     () => ({
       ...(gender && { gender }),
       ...(sale && { sale: true }),
       ...(search && { search }),
+      ...(sortBy && { sortBy }),
+      ...(sortValue && { sortValue }),
+      ...(orderBy && { orderBy }),
     }),
-    [gender, sale, search]
+    [gender, sale, search, sortBy, sortValue, orderBy]
   );
 
   const loadMoreProducts = useCallback(async () => {
@@ -110,6 +115,8 @@ export function ProductsContent() {
         router={router}
         loadMoreProducts={loadMoreProducts}
         hasMore={hasMore}
+       
+        filters={filters}
       />
     </>
   );
