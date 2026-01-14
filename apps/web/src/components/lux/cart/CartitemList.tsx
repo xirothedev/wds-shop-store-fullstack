@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import {
   CartItemEditRequestDto,
@@ -36,7 +37,7 @@ export function CartItemList() {
     mutationFn: updateCartItem,
     onSuccess: async () => {
       await query.refetch();
-      console.log(query.isFetching);
+      // console.log(query.isFetching);
     },
   });
 
@@ -49,7 +50,7 @@ export function CartItemList() {
   }, [selectedItems]);
 
   const handleSelectItem = (itemId: string, amount: number) => {
-    console.log(1);
+    console.log(itemId);
     setSelectedItems((prev) => {
       const newSet = new Map(prev);
       if (newSet.has(itemId)) {
@@ -81,7 +82,7 @@ export function CartItemList() {
         checked
           ? new Map(
               query.data.map((item) => [
-                item.cartItemId,
+                item.size + '-' + item.cartItemId,
                 item.priceCurrent * item.quantity,
               ])
             )
@@ -92,7 +93,9 @@ export function CartItemList() {
 
   const allSelected = useMemo(() => {
     if (!query.data || query.data.length === 0) return false;
-    return query.data.every((item) => selectedItems.has(item.cartItemId));
+    return query.data.every((item) =>
+      selectedItems.has(item.size + '-' + item.cartItemId)
+    );
   }, [query.data, selectedItems]);
 
   const isIndeterminate = useMemo(() => {
@@ -100,8 +103,23 @@ export function CartItemList() {
     return selectedItems.size > 0 && selectedItems.size < query.data.length;
   }, [query.data, selectedItems]);
 
-  const handlePayment = () => {
-    console.log('PAYMENT', Array.from(selectedItems));
+  const handlePayment = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (selectedItems.size === 0) return;
+
+    const items = Array.from(selectedItems)
+      .map(([id, _amount]) => {
+        const cartItem = query.data?.find(
+          (item) => item.size + '-' + item.cartItemId === id
+        );
+        if (!cartItem) return null;
+        return { ...cartItem }; // Assuming cartItem.id is the productId, adjust if needed
+      })
+      .filter(Boolean);
+
+    console.log(items);
+    localStorage.setItem('orderItems', JSON.stringify(items));
+    window.location.href = 'http://localhost:3000/orders/confirm';
   };
 
   return (
@@ -124,7 +142,7 @@ export function CartItemList() {
       {query.data && !query.isLoading && (
         <form
           className="flex w-full flex-col items-center gap-4"
-          onSubmit={handlePayment}
+          onSubmit={(e) => handlePayment(e)}
         >
           <div className="grid w-full grid-cols-[10%_30%_30%_30%] content-center p-4 text-center font-medium md:grid-cols-[5%_15%_25%_15%_15%_15%_10%] md:pb-8">
             <div className="flex justify-center">
@@ -153,11 +171,13 @@ export function CartItemList() {
           <div className="flex w-full max-w-7xl flex-col gap-4">
             {query.data.map((product: CartItem) => (
               <CartItemCard
-                key={product.cartItemId}
+                key={product.size + '-' + product.cartItemId}
                 product={product}
                 deleteItem={deleteItem.mutate}
                 editItem={editItem.mutate}
-                isSelected={selectedItems.has(product.cartItemId)}
+                isSelected={selectedItems.has(
+                  product.size + '-' + product.cartItemId
+                )}
                 onSelect={handleSelectItem}
                 deleteSelectedItem={deleteSelectedItem}
                 isUpdating={query.isFetching}
@@ -165,7 +185,20 @@ export function CartItemList() {
             ))}
             {query.data.length === 0 && (
               <div className="grid h-50 items-center overflow-hidden rounded-xl bg-white/5 p-4 text-center">
-                <p>Trong giỏ hàng của bạn không có sản phẩm?!</p>
+                <span>
+                  <p className="font-bold">
+                    Trong giỏ hàng của bạn không có sản phẩm.
+                  </p>
+                  <p className="font-bold">
+                    Đến trang{' '}
+                    <Link
+                      href="/products"
+                      className="text-amber-500 hover:text-amber-700"
+                    >
+                      Bộ sưu tập
+                    </Link>
+                  </p>
+                </span>
               </div>
             )}
           </div>
@@ -184,9 +217,9 @@ export function CartItemList() {
             <button
               type="submit"
               disabled={selectedItems.size === 0}
-              className="rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl"
+              className="cursor-pointer rounded-xl border-2 border-amber-500 from-amber-400 to-amber-500 px-4 py-2 text-right text-2xl font-bold text-amber-500 hover:bg-linear-to-r hover:text-white disabled:opacity-50"
             >
-              Thanh Toán
+              Đặt đơn
             </button>
           </div>
         </form>

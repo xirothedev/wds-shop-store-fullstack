@@ -1,12 +1,5 @@
 import { PaymentTransactionStatus } from '@generated/prisma';
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -26,7 +19,7 @@ export class PaymentController {
     summary: 'Create or refresh a payment transaction for an order',
   })
   initiatePayment(
-    @Param('orderId', new ParseUUIDPipe()) orderId: string,
+    @Param('orderId') orderId: string,
     @Body() dto: InitiatePaymentDto,
     @CurrentUser() user: AuthenticatedUser
   ) {
@@ -38,7 +31,7 @@ export class PaymentController {
     summary: 'Get payment transaction info for an order',
   })
   getPaymentForOrder(
-    @Param('orderId', new ParseUUIDPipe()) orderId: string,
+    @Param('orderId') orderId: string,
     @CurrentUser() user: AuthenticatedUser
   ) {
     return this.paymentService.getPaymentForOrder(orderId, user);

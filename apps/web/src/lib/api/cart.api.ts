@@ -9,6 +9,19 @@ export interface CartItemEditRequestDto {
   size: string;
 }
 
+export interface CartItemAddRequestDto {
+  productId: string;
+  quantity: number;
+  size?: string;
+}
+
+export const getNumberOfCartItem = async (): Promise<number> => {
+  const res = await apiClient.get('/cart');
+  const temp = res.data;
+  const data = temp.data;
+  return data.length;
+};
+
 export const getAllCartItem = async (): Promise<CartItem[]> => {
   const res = await apiClient.get('/cart');
   const temp = res.data;
@@ -36,4 +49,9 @@ export const deleteCartItem = async (itemId: string): Promise<void> => {
 export const updateCartItem = async (item: CartItemEditRequestDto) => {
   console.log(item);
   await apiClient.put(`/cart/items/${item.id}`, item);
+};
+
+export const addCartItem = async (item: CartItemAddRequestDto) => {
+  console.log(item);
+  await apiClient.post('/cart/items', item);
 };

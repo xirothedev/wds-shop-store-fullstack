@@ -36,7 +36,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <LuxNavbar links={navLinks} cartCount={3} />
+      <LuxNavbar links={navLinks} />
 
       <main className="min-h-screen pt-24 pb-16">
         <div className="mx-auto max-w-6xl px-6">

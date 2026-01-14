@@ -22,14 +22,13 @@ export class ItemRequestDto {
   })
   productId: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({
     description: 'Product size',
     example: '42',
     enum: ['38', '39', '40', '41', '42', '43', '44', '45'],
   })
-  size: string;
+  size?: string;
 
   @IsInt()
   @Min(1)

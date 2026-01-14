@@ -1,9 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { Breadcrumb } from '@/components/lux/Breadcrumb';
 import { RevealOnScroll } from '@/components/lux/RevealOnScroll';
+import { addCartItem, CartItemAddRequestDto } from '@/lib/api/cart.api';
 import type { Product, ProductImage } from '@/types/product';
 
 import { ProductDetailsTabs } from './ProductDetailsTabs';
@@ -20,6 +22,7 @@ export function ProductDetailPage({
   product,
   related,
 }: ProductDetailPageProps) {
+  const router = useRouter();
   const [selectedImageId, setSelectedImageId] = useState<string | undefined>(
     product.images?.[0]?.id
   );
@@ -44,14 +47,23 @@ export function ProductDetailPage({
     images.find((image) => image.id === selectedImageId) ?? images[0];
 
   const handleAddToCart = () => {
-    // Tạm thời chỉ log ra console để chuẩn bị tích hợp store giỏ hàng
-    console.log('ADD_TO_CART', {
+    const token = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('access_token='))
+      ?.split('=')[1];
+
+    if (!token) {
+      router.push('/auth/login');
+      return;
+    }
+
+    const obj: CartItemAddRequestDto = {
       productId: product.id,
-      productSlug: product.slug,
-      productName: product.name,
       size: selectedSizeId,
-      quantity,
-    });
+      quantity: quantity,
+    };
+
+    addCartItem(obj);
   };
 
   const getMaxQuantity = () => {

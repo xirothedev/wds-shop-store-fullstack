@@ -101,7 +101,7 @@ export function ProductsContent() {
 
   return (
     <>
-      <LuxNavbar links={navLinks} cartCount={3} />
+      <LuxNavbar links={navLinks} />
       <ProductsLists
         isLoading={isLoading}
         products={products}
