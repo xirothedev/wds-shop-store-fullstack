@@ -8,38 +8,142 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductsService {
-  private readonly CDN_BASE_URL =
-    process.env.CDN_BASE_URL || 'https://cdn.wss.xirothedev.site';
+  private readonly CDN_BASE_URL = process.env.CDN_BASE_URL;
 
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Transform product images to include CDN prefix
+   * Transform product images to include CDN prefix and format sizeStocks
    */
   private transformProductImages(product: any): any {
-    if (product.images && Array.isArray(product.images)) {
-      return {
-        ...product,
-        images: product.images.map((image: string) => {
-          // Skip if already has http/https prefix
-          if (
-            typeof image === 'string' &&
-            (image.startsWith('http://') || image.startsWith('https://'))
-          ) {
-            return image;
-          }
-          // Add CDN prefix
-          if (typeof image === 'string') {
-            return `${this.CDN_BASE_URL}${
-              image.startsWith('/') ? '' : '/'
-            }${image}`;
-          }
+    const transformed = { ...product };
+
+    // Transform images with CDN prefix
+    if (transformed.images && Array.isArray(transformed.images)) {
+      transformed.images = transformed.images.map((image: string) => {
+        // Skip if already has http/https prefix
+        if (
+          typeof image === 'string' &&
+          (image.startsWith('http://') || image.startsWith('https://'))
+        ) {
           return image;
-        }),
-      };
+        }
+        // Add CDN prefix
+        if (typeof image === 'string') {
+          return `${this.CDN_BASE_URL}${image.startsWith('/') ? '' : '/'}${image}`;
+        }
+        return image;
+      });
     }
-    return product;
+
+    // Transform Decimal prices to numbers
+    if (transformed.priceCurrent) {
+      transformed.priceCurrent = Number(transformed.priceCurrent);
+    }
+    if (transformed.priceOriginal) {
+      transformed.priceOriginal = Number(transformed.priceOriginal);
+    }
+    if (transformed.priceDiscount) {
+      transformed.priceDiscount = Number(transformed.priceDiscount);
+    }
+
+    // Transform Decimal ratings to numbers
+    if (transformed.ratingValue) {
+      transformed.ratingValue = Number(transformed.ratingValue);
+    }
+
+    // Transform sizeStocks to simple format {size, stock}
+    if (transformed.sizeStocks && Array.isArray(transformed.sizeStocks)) {
+      transformed.sizeStocks = transformed.sizeStocks.map((sizeStock: any) => ({
+        size: sizeStock.size,
+        stock: sizeStock.stock,
+      }));
+    }
+
+    return transformed;
   }
+  /**
+   * Get date filter for WHERE clause (used for filtering by date range)
+   */
+  getDateFilter(sortValue?: string): any {
+    if (!sortValue) return undefined;
+
+    const now = new Date();
+
+    // Hôm nay (tính từ 00:00:00)
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+    // Tuần này (tính từ đầu tuần, ví dụ Thứ 2)
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(
+      now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)
+    );
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // Tháng này (tính từ ngày 1 đầu tháng)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Năm này (tính từ ngày 1 đầu năm)
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    switch (sortValue) {
+      case 'today':
+        return { createdAt: { gte: startOfToday } };
+      case 'week':
+        return { createdAt: { gte: startOfWeek } };
+      case 'month':
+        return { createdAt: { gte: startOfMonth } };
+      case 'year':
+        return { createdAt: { gte: startOfYear } };
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Get orderBy clause for sorting
+   */
+  sortByFeild: object | any = (
+    sortBy: string,
+    sortValue: string,
+    orderBy: string
+  ) => {
+    if (!sortBy) return;
+
+    switch (sortBy) {
+      case 'latest':
+        return {
+          createdAt: orderBy === 'asc' ? 'asc' : 'desc',
+        };
+      case 'appreciated':
+        return {
+          ratingValue: orderBy === 'asc' ? 'asc' : 'desc',
+        };
+      case 'trending':
+        return {
+          ratingCount: orderBy === 'asc' ? 'asc' : 'desc',
+        };
+      case 'name':
+        return {
+          name: orderBy === 'asc' ? 'asc' : 'desc',
+        };
+      case 'priceCurrent':
+        return {
+          priceCurrent: orderBy === 'asc' ? 'asc' : 'desc',
+        };
+      case 'date':
+        // For date sorting, use createdAt field with the provided orderBy direction
+        return {
+          createdAt: orderBy === 'asc' ? 'asc' : 'desc',
+        };
+      default:
+        return undefined;
+    }
+  };
 
   private async generateUniqueSlug(name: string): Promise<string> {
     const baseSlug = slugify(name, { lower: true });
@@ -58,7 +162,10 @@ export class ProductsService {
       isPublished: true,
     };
 
-    const products = await this.prisma.product.findMany({ where });
+    const products = await this.prisma.product.findMany({
+      where,
+      include: { sizeStocks: true },
+    });
     const featuredProducts = products
       .filter(
         (product) => product.ratingCount >= 100 && product.ratingValue >= 4.0
@@ -130,9 +237,13 @@ export class ProductsService {
   async findAll(
     gender?: string,
     isSale?: string,
+    sortBy?: string,
+    sortValue?: string,
+    orderBy?: string,
     includeDraft: boolean = false
   ): Promise<any[]> {
     const where: any = {};
+
     if (!includeDraft) {
       where.isPublished = true;
     }
@@ -164,22 +275,39 @@ export class ProductsService {
       };
     }
 
+    // Add date filter if sortBy is 'date'
+    if (sortBy === 'date') {
+      const dateFilter = this.getDateFilter(sortValue);
+      if (dateFilter) {
+        where.createdAt = dateFilter.createdAt;
+      }
+    }
+
     const products = await this.prisma.product.findMany({
       where,
+      orderBy: this.sortByFeild(sortBy, sortValue, orderBy),
+      include: { sizeStocks: true },
     });
 
     // Transform images with CDN prefix
-    return products.map((product) => this.transformProductImages(product));
+    const transformedProducts = products.map((product) =>
+      this.transformProductImages(product)
+    );
+
+    return transformedProducts;
   }
 
-  async findAllForAdmin(gender?: string, isSale?: string): Promise<any[]> {
-    return this.findAll(gender, isSale, true);
+  async findAllForAdmin(gender?: string, isSale?: string) {
+    return this.findAll(gender, isSale, undefined, undefined, undefined, true);
   }
 
   async searchProductsWithRelevance(
     query: string,
     gender?: string,
-    isSale?: string
+    isSale?: string,
+    sortBy?: string,
+    sortValue?: string,
+    orderBy?: string
   ) {
     // 1. Clean inputs
     const cleanQuery = query ? query.replace(/^['"]|['"]$/g, '').trim() : '';
@@ -200,20 +328,10 @@ export class ProductsService {
         ? (cleanGender.toUpperCase() as 'MALE' | 'FEMALE' | 'UNISEX')
         : null;
 
-    // If no search query, return filtered products
+    // If no search query, return filtered products (using findAll logic)
     if (!cleanQuery) {
-      const where: any = { isPublished: true };
-      if (genderFilter) where.gender = genderFilter;
-      if (isSaleValue) where.priceDiscount = { not: null };
-
-      const products = await this.prisma.product.findMany({
-        where,
-        include: { sizeStocks: true },
-      });
-      return products.map((p) => this.transformProductImages(p));
+      return this.findAll(gender, isSale, sortBy, sortValue, orderBy);
     }
-
-    // 2. Build flexible OR search term ("word1 | word2")
     const formattedSearchTerm = cleanQuery
       .split(/\s+/)
       .filter((word) => word.length > 0)
@@ -267,17 +385,26 @@ export class ProductsService {
     if (genderFilter) whereClause.gender = genderFilter;
     if (isSaleValue) whereClause.priceDiscount = { not: null };
 
+    // Add date filter if sortBy is 'date'
+    if (sortBy === 'date') {
+      const dateFilter = this.getDateFilter(sortValue);
+      if (dateFilter) {
+        whereClause.createdAt = dateFilter.createdAt;
+      }
+    }
+
     const fullProducts = await this.prisma.product.findMany({
       where: whereClause,
+      orderBy: this.sortByFeild(sortBy, sortValue, orderBy),
       include: { sizeStocks: true },
     });
 
-    // Preserve order by productIds (relevance)
-    const sortedResults = productIds
-      .map((id) => fullProducts.find((p) => p.id === id))
-      .filter((p): p is NonNullable<typeof p> => !!p);
+    // Transform images with CDN prefix
+    const transformedProducts = fullProducts.map((product) =>
+      this.transformProductImages(product)
+    );
 
-    return sortedResults.map((product) => this.transformProductImages(product));
+    return transformedProducts;
   }
 
   async getSearchSuggestions(
@@ -338,7 +465,10 @@ export class ProductsService {
       where.isPublished = true;
     }
 
-    const product = await this.prisma.product.findFirst({ where });
+    const product = await this.prisma.product.findFirst({
+      where,
+      include: { sizeStocks: true },
+    });
     if (!product) {
       throw new NotFoundException('Product not found (VERIFY_UPDATE)');
     }
@@ -353,6 +483,7 @@ export class ProductsService {
 
     const product = await this.prisma.product.findFirst({
       where,
+      include: { sizeStocks: true },
     });
     if (!product) {
       throw new NotFoundException('Product not found (VERIFY_UPDATE)');
@@ -390,6 +521,7 @@ export class ProductsService {
       orderBy: {
         createdAt: 'desc',
       },
+      include: { sizeStocks: true },
     });
 
     // Transform images with CDN prefix

@@ -30,6 +30,55 @@ export class ProductsController {
   }
 
   @Public()
+  @Get()
+  @ApiOperation({ summary: 'Get all products with filtering and sorting' })
+  @ApiQuery({ name: 'q', required: false, description: 'Search term' })
+  @ApiQuery({
+    name: 'gender',
+    required: false,
+    enum: ['MALE', 'FEMALE', 'UNISEX'],
+  })
+  @ApiQuery({ name: 'isSale', required: false, type: Boolean })
+  @ApiQuery({ name: 'sortBy', required: false, description: 'Sort field' })
+  @ApiQuery({
+    name: 'sortValue',
+    required: false,
+    description: 'Sort value (e.g., date timeframe)',
+  })
+  @ApiQuery({ name: 'orderBy', required: false, enum: ['asc', 'desc'] })
+  @ApiResponse({
+    status: 200,
+    description: 'List of products',
+    type: [ProductDto],
+  })
+  async findAll(
+    @Query('q') q?: string,
+    @Query('gender') gender?: string,
+    @Query('isSale') isSale?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortValue') sortValue?: string,
+    @Query('orderBy') orderBy?: string
+  ) {
+    if (q) {
+      return this.productsService.searchProductsWithRelevance(
+        q,
+        gender,
+        isSale,
+        sortBy,
+        sortValue,
+        orderBy
+      );
+    }
+    return this.productsService.findAll(
+      gender,
+      isSale,
+      sortBy,
+      sortValue,
+      orderBy
+    );
+  }
+
+  @Public()
   @Get('suggestions')
   @ApiOperation({ summary: 'Get search suggestions' })
   @ApiQuery({
@@ -82,52 +131,6 @@ export class ProductsController {
   })
   async getFeaturedProducts() {
     return this.productsService.getFeaturedProducts();
-  }
-
-  //get products and search
-  @Public()
-  @Get()
-  @ApiOperation({ summary: 'Get all products' })
-  @ApiQuery({
-    name: 'gender',
-    required: false,
-    description: 'Filter by gender (MALE, FEMALE, UNISEX)',
-    enum: ['MALE', 'FEMALE', 'UNISEX'],
-  })
-  @ApiQuery({
-    name: 'isSale',
-    required: false,
-    description: 'Filter products on sale (true/false)',
-    type: Boolean,
-    example: false,
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search term',
-    type: String,
-    example: 'shirt',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'List products',
-    type: [ProductDto],
-  })
-  async findAll(
-    @Query('gender') gender?: string,
-    @Query('isSale') isSale?: string,
-    @Query('search') search?: string
-  ) {
-    // If search query provided, delegate to relevance search
-    if (search && String(search).trim() !== '') {
-      return this.productsService.searchProductsWithRelevance(
-        search,
-        gender,
-        isSale
-      );
-    }
-
-    return this.productsService.findAll(gender, isSale);
   }
 
   @Get('admin')

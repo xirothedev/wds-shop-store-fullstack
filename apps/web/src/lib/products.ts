@@ -90,13 +90,19 @@ export async function getAllProducts(
     gender?: 'MALE' | 'FEMALE' | 'UNISEX';
     sale?: boolean;
     search?: string;
+    sortBy?: string;
+    sortValue?: string;
+    orderBy?: string;
   }
 ): Promise<{ products: Product[]; hasMore: boolean }> {
   try {
     const apiProducts = await getProducts(
       filters?.gender,
       filters?.sale ? 'true' : 'false',
-      filters?.search
+      filters?.search,
+      filters?.sortBy,
+      filters?.sortValue,
+      filters?.orderBy
     );
 
     // Ensure we have an array

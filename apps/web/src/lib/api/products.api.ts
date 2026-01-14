@@ -24,7 +24,10 @@ export interface ProductPayload {
 export const getProducts = async (
   gender?: string,
   isSale?: string,
-  search?: string
+  search?: string,
+  sortBy?: string,
+  sortValue?: string,
+  orderBy?: string
 ): Promise<Product[]> => {
   const params: Record<string, string> = {};
 
@@ -36,6 +39,15 @@ export const getProducts = async (
   }
   if (search) {
     params.search = search;
+  }
+  if (sortBy) {
+    params.sortBy = sortBy;
+  }
+  if (sortValue) {
+    params.sortValue = sortValue;
+  }
+  if (orderBy) {
+    params.orderBy = orderBy;
   }
 
   const response = await apiClient.get<ApiResponse<Product[]>>(
