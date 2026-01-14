@@ -1,14 +1,12 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 
 import ProductsLoading from '@/app/products/loading';
 import { Product } from '@/types/product';
 
-import { ProductListCard } from './ProductListCard';
 import FilterProduct from './FilterProduct';
+import { ProductListCard } from './ProductListCard';
 
 type ProductsListsProps = {
   isLoading: boolean;
@@ -22,7 +20,7 @@ type ProductsListsProps = {
     search?: string | null;
     sortBy?: string;
     sortValue?: string;
-    orderBy?:string;
+    orderBy?: string;
   };
 };
 const ProductsLists = ({
@@ -31,12 +29,9 @@ const ProductsLists = ({
   router,
   loadMoreProducts,
   hasMore,
- 
-  filters
-}: ProductsListsProps) => {
- 
 
- 
+  filters,
+}: ProductsListsProps) => {
   return products.length === 0 ? (
     isLoading ? (
       <ProductsLoading />
@@ -104,8 +99,8 @@ const ProductsLists = ({
                 : filters.sale
                   ? 'Những sản phẩm đang được giảm giá'
                   : 'Khám phá bộ sưu tập giày thể thao cao cấp của chúng tôi'}
-            </p>
-             <FilterProduct />
+          </p>
+          <FilterProduct />
         </div>
 
         {/* Products Grid with Infinite Scroll */}
@@ -131,7 +126,7 @@ const ProductsLists = ({
             </div>
           }
         >
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ]">
+          <div className="] grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
               <ProductListCard key={product.id} product={product} />
             ))}
