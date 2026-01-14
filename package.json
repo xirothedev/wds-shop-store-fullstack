@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "prepare": "husky"
+    "prepare": "husky",
+    "pdf": "md-to-pdf REPORT-WDS-GEN8-GROUP3.md"
   },
   "devDependencies": {
     "eslint-plugin-simple-import-sort": "^12.1.1",
