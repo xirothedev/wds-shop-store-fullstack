@@ -130,6 +130,31 @@ export class ProductsController {
     return this.productsService.findAll(gender, isSale);
   }
 
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get all products for admin (include drafts)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List products for admin',
+    type: [ProductDto],
+  })
+  async findAllForAdmin(
+    @Query('gender') gender?: string,
+    @Query('isSale') isSale?: string
+  ) {
+    return this.productsService.findAllForAdmin(gender, isSale);
+  }
+
+  @Get('admin/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get product by id for admin (include drafts)' })
+  @ApiResponse({ status: 200, description: 'Get product', type: ProductDto })
+  findOneForAdmin(@Param('id') id: string) {
+    return this.productsService.findOne(id, true);
+  }
+
   //get product by slug
   @Public()
   @Get('slug/:slug')
@@ -157,7 +182,6 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
   @Patch(':id')
-  @Public()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update product' })
@@ -172,7 +196,6 @@ export class ProductsController {
 
   //delete product
   @Delete(':id')
-  @Public()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete product' })

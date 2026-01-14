@@ -381,16 +381,19 @@ export function ProductForm({
             <div className="space-y-2">
               <Label htmlFor="badge">Badge</Label>
               <Select
-                value={formData.badge}
+                value={formData.badge ?? 'none'}
                 onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, badge: value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    badge: value === 'none' ? '' : value,
+                  }))
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn badge" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Không có</SelectItem>
+                  <SelectItem value="none">Không có</SelectItem>
                   <SelectItem value="BEST SELLER">BEST SELLER</SelectItem>
                   <SelectItem value="HOT ITEM">HOT ITEM</SelectItem>
                   <SelectItem value="NEW">NEW</SelectItem>

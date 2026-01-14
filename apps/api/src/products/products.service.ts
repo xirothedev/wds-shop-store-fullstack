@@ -127,8 +127,15 @@ export class ProductsService {
     };
   }
 
-  async findAll(gender?: string, isSale?: string): Promise<any[]> {
+  async findAll(
+    gender?: string,
+    isSale?: string,
+    includeDraft: boolean = false
+  ): Promise<any[]> {
     const where: any = {};
+    if (!includeDraft) {
+      where.isPublished = true;
+    }
 
     // Strip quotes from query parameter
     const cleanGender = gender
@@ -163,6 +170,10 @@ export class ProductsService {
 
     // Transform images with CDN prefix
     return products.map((product) => this.transformProductImages(product));
+  }
+
+  async findAllForAdmin(gender?: string, isSale?: string): Promise<any[]> {
+    return this.findAll(gender, isSale, true);
   }
 
   async searchProductsWithRelevance(
@@ -321,17 +332,27 @@ export class ProductsService {
 
     return products.map((product) => product.name);
   }
-  async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({ where: { id } });
+  async findOne(id: string, includeDraft: boolean = false) {
+    const where: any = { id };
+    if (!includeDraft) {
+      where.isPublished = true;
+    }
+
+    const product = await this.prisma.product.findFirst({ where });
     if (!product) {
       throw new NotFoundException('Product not found (VERIFY_UPDATE)');
     }
     // Transform images with CDN prefix
     return this.transformProductImages(product);
   }
-  async findOneBySlug(slug: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { slug },
+  async findOneBySlug(slug: string, includeDraft: boolean = false) {
+    const where: any = { slug };
+    if (!includeDraft) {
+      where.isPublished = true;
+    }
+
+    const product = await this.prisma.product.findFirst({
+      where,
     });
     if (!product) {
       throw new NotFoundException('Product not found (VERIFY_UPDATE)');
@@ -376,7 +397,7 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.findOne(id);
+    const product = await this.findOne(id, true);
 
     const {
       name,
@@ -438,7 +459,7 @@ export class ProductsService {
   }
 
   async remove(id: string) {
-    await this.findOne(id); // Check if exists
+    await this.findOne(id, true); // Check if exists
     await this.prisma.product.delete({ where: { id } });
     return {
       success: true,

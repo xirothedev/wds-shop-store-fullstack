@@ -42,11 +42,11 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
 
   useEffect(() => {
-    loadProducts();
+    void loadProducts();
   }, []);
 
-  const loadProducts = () => {
-    const allProducts = getAllProductsForAdmin();
+  const loadProducts = async () => {
+    const allProducts = await getAllProductsForAdmin();
     setProducts(allProducts);
   };
 
@@ -81,26 +81,26 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = (productId: string) => {
+  const handleDelete = async (productId: string) => {
     try {
-      deleteProduct(productId);
-      loadProducts();
+      await deleteProduct(productId);
+      await loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
       alert('Không thể xóa sản phẩm');
     }
   };
 
-  const handleSubmit = (
+  const handleSubmit = async (
     productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
   ) => {
     try {
       if (editingProduct) {
-        updateProduct(editingProduct.id, productData);
+        await updateProduct(editingProduct.id, productData);
       } else {
-        createProduct(productData);
+        await createProduct(productData);
       }
-      loadProducts();
+      await loadProducts();
       setIsFormOpen(false);
       setEditingProduct(undefined);
     } catch (error) {

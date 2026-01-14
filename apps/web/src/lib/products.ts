@@ -1,10 +1,16 @@
 import type { Product, ProductImage } from '@/types/product';
 
 import {
+  createProduct as createProductApi,
+  deleteProduct as deleteProductApi,
   getFeaturedProducts as getFeaturedProductsApi,
+  getProductById as getProductByIdApi,
   getProductBySlug as getProductBySlugApi,
   getProducts,
+  getProductsForAdmin as getProductsForAdminApi,
   getRelatedProducts as getRelatedProductsApi,
+  updateProduct as updateProductApi,
+  type ProductPayload,
 } from './api/products.api';
 
 /**
@@ -47,6 +53,35 @@ function transformProductFromApi(apiProduct: any): Product {
       : undefined,
   };
 }
+
+const toProductPayload = (
+  productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
+): ProductPayload => {
+  const images =
+    productData.images?.map((image) => image.src).filter(Boolean) ?? [];
+  const priceOriginal = productData.priceOriginal ?? undefined;
+  const priceDiscount =
+    priceOriginal && priceOriginal > productData.priceCurrent
+      ? priceOriginal - productData.priceCurrent
+      : undefined;
+
+  return {
+    name: productData.name,
+    description: productData.description,
+    priceCurrent: productData.priceCurrent,
+    priceOriginal,
+    priceDiscount,
+    badge: productData.badge || undefined,
+    isPublished: productData.isPublished ?? true,
+    gender: productData.gender,
+    images,
+    sizeStocks: productData.sizeStocks?.map((item) => ({
+      size: item.size,
+      stock: item.stock,
+    })),
+    category: productData.category,
+  };
+};
 
 const MOCK_PRODUCTS: Product[] = [
   {
@@ -611,19 +646,19 @@ export async function getAllProducts(
   }
 ): Promise<{ products: Product[]; hasMore: boolean }> {
   try {
-    const MOCK_PRODUCTS = await getProducts(
+    const apiProducts = await getProducts(
       filters?.gender,
       filters?.sale ? 'true' : 'false',
       filters?.search
     );
 
     // Ensure we have an array
-    if (!Array.isArray(MOCK_PRODUCTS)) {
-      console.error('getProducts did not return an array:', MOCK_PRODUCTS);
+    if (!Array.isArray(apiProducts)) {
+      console.error('getProducts did not return an array:', apiProducts);
       return { products: [], hasMore: false };
     }
 
-    const filteredProducts = MOCK_PRODUCTS.filter(
+    const filteredProducts = apiProducts.filter(
       (product) => product.isPublished !== false
     );
     const startIndex = (page - 1) * limit;
@@ -654,14 +689,11 @@ export async function getProductBySlug(
 }
 export async function getProductById(id: string): Promise<Product | undefined> {
   try {
-    // Note: API doesn't have getProductById endpoint, using getProducts and filtering
-    // If API adds this endpoint later, update this function
-    const products = await getProducts();
-    const product = products.find((p) => p.id === id);
-    if (!product) {
+    const apiProduct = await getProductByIdApi(id);
+    if (!apiProduct) {
       return undefined;
     }
-    return product;
+    return transformProductFromApi(apiProduct);
   } catch (error) {
     console.error('Error in getProductById:', error);
     return undefined;
@@ -695,94 +727,46 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
 // CRUD Functions for Admin Panel
 
-export function createProduct(
+export async function createProduct(
   productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
-): Product {
-  // Generate ID and slug if not provided
-  const id = productData.slug || `product-${Date.now()}`;
-  const slug =
-    productData.slug ||
-    productData.name
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-
-  // Check if slug already exists
-  if (MOCK_PRODUCTS.some((p) => p.slug === slug)) {
-    throw new Error(`Product with slug "${slug}" already exists`);
-  }
-
-  // Calculate discount if both prices are provided
-  const priceDiscount =
-    productData.priceOriginal &&
-    productData.priceOriginal > productData.priceCurrent
-      ? productData.priceOriginal - productData.priceCurrent
-      : undefined;
-
-  const newProduct: Product = {
-    ...productData,
-    id,
-    slug,
-    priceDiscount,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  MOCK_PRODUCTS.push(newProduct);
-  return newProduct;
+): Promise<Product> {
+  const payload = toProductPayload(productData);
+  const apiProduct = await createProductApi(payload);
+  return transformProductFromApi(apiProduct);
 }
 
-export function updateProduct(
+export async function updateProduct(
   id: string,
-  productData: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
-): Product {
-  const index = MOCK_PRODUCTS.findIndex((p) => p.id === id);
-  if (index === -1) {
-    throw new Error(`Product with id "${id}" not found`);
-  }
-
-  const existingProduct = MOCK_PRODUCTS[index];
-
-  // Check slug uniqueness if slug is being updated
-  if (productData.slug && productData.slug !== existingProduct.slug) {
-    if (MOCK_PRODUCTS.some((p) => p.slug === productData.slug && p.id !== id)) {
-      throw new Error(`Product with slug "${productData.slug}" already exists`);
-    }
-  }
-
-  // Calculate discount if prices are updated
-  let priceDiscount = existingProduct.priceDiscount;
-  const priceCurrent = productData.priceCurrent ?? existingProduct.priceCurrent;
-  const priceOriginal =
-    productData.priceOriginal ?? existingProduct.priceOriginal;
-
-  if (priceOriginal && priceOriginal > priceCurrent) {
-    priceDiscount = priceOriginal - priceCurrent;
-  } else {
-    priceDiscount = undefined;
-  }
-
-  const updatedProduct: Product = {
-    ...existingProduct,
-    ...productData,
-    priceDiscount,
-    updatedAt: new Date().toISOString(),
-  };
-
-  MOCK_PRODUCTS[index] = updatedProduct;
-  return updatedProduct;
+  productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<Product> {
+  const payload = toProductPayload(productData);
+  const apiProduct = await updateProductApi(id, payload);
+  return transformProductFromApi(apiProduct);
 }
 
-export function deleteProduct(id: string): boolean {
-  const index = MOCK_PRODUCTS.findIndex((p) => p.id === id);
-  if (index === -1) {
-    throw new Error(`Product with id "${id}" not found`);
-  }
-
-  MOCK_PRODUCTS.splice(index, 1);
+export async function deleteProduct(id: string): Promise<boolean> {
+  await deleteProductApi(id);
   return true;
 }
 
-export function getAllProductsForAdmin(): Product[] {
-  return [...MOCK_PRODUCTS];
+export async function getAllProductsForAdmin(): Promise<Product[]> {
+  try {
+    const adminProducts = await getProductsForAdminApi();
+    if (Array.isArray(adminProducts) && adminProducts.length > 0) {
+      return adminProducts.map(transformProductFromApi);
+    }
+  } catch (error) {
+    console.error('Error loading admin products:', error);
+  }
+
+  try {
+    const publicProducts = await getProducts();
+    if (Array.isArray(publicProducts) && publicProducts.length > 0) {
+      return publicProducts.map(transformProductFromApi);
+    }
+  } catch (error) {
+    console.error('Error loading public products:', error);
+  }
+
+  return [];
 }
