@@ -5,7 +5,7 @@ import { LuxNavbar } from '@/components/lux/LuxNavbar';
 export default function ProductsLoading() {
   return (
     <>
-      <LuxNavbar links={navLinks} cartCount={3} />
+      <LuxNavbar links={navLinks} />
       <main className="min-h-screen pt-24">
         <div className="mx-auto max-w-7xl px-6 pb-16">
           <div className="mb-12 text-center">
