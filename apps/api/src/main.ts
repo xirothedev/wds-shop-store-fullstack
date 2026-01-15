@@ -18,10 +18,11 @@ async function bootstrap() {
   const logger = new Logger(bootstrap.name);
 
   // Enable CORS first - Must be before any other middleware
+  const corsOrigin = configService.getOrThrow<string>('CORS_ORIGIN');
   const isProduction = process.env.NODE_ENV === 'production';
 
   app.enableCors({
-    origin: '*',
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
