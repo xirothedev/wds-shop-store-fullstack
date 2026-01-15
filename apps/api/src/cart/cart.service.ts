@@ -128,12 +128,16 @@ export class CartService {
       slug: item.product.slug,
       name: item.product.name,
       description: item.product.description,
-      priceCurrent: item.product.priceCurrent,
-      priceOriginal: item.product.priceOriginal,
-      priceDiscount: item.product.priceDiscount,
+      priceCurrent: Number(item.product.priceCurrent),
+      priceOriginal: item.product.priceOriginal
+        ? Number(item.product.priceOriginal)
+        : undefined,
+      priceDiscount: item.product.priceDiscount
+        ? Number(item.product.priceDiscount)
+        : undefined,
       badge: item.product.badge ?? undefined,
-      ratingValue: item.product.ratingValue,
-      ratingCount: item.product.ratingCount,
+      ratingValue: Number(item.product.ratingValue ?? 0),
+      ratingCount: item.product.ratingCount ?? 0,
       gender: item.product.gender,
       isPublished: item.product.isPublished,
       createdAt: new Date(item.product.updatedAt).toDateString(),

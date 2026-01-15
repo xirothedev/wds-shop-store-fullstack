@@ -18,8 +18,10 @@ async function bootstrap() {
   const logger = new Logger(bootstrap.name);
 
   // Enable CORS first - Must be before any other middleware
+  const isProduction = process.env.NODE_ENV === 'production';
+
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN', 'http://localhost:3000'),
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -37,7 +39,7 @@ async function bootstrap() {
 
   // Middleware to strip Content-Type for GET requests to prevent body parsing errors
   // This handles clients that incorrectly send 'Content-Type: application/json' with empty body
-  app.use((req, res, next) => {
+  app.use((req: any, _res: any, next: any) => {
     if (req.method === 'GET') {
       delete req.headers['content-type'];
     }
@@ -48,7 +50,6 @@ async function bootstrap() {
   app.use(cookieParser());
   app.set('trust proxy', true);
 
-  const isProduction = process.env.NODE_ENV === 'production';
   app.use(
     session({
       secret: configService.getOrThrow<string>('SESSION_SECRET'),
@@ -56,7 +57,7 @@ async function bootstrap() {
       saveUninitialized: true,
       cookie: {
         secure: isProduction,
-        sameSite: 'lax', // Always lax for multiple ports/subdomains
+        sameSite: 'lax',
       },
     })
   );

@@ -168,9 +168,12 @@ export class ProductsService {
     });
     const featuredProducts = products
       .filter(
-        (product) => product.ratingCount >= 100 && product.ratingValue >= 4.0
+        (product) =>
+          product.ratingCount >= 100 &&
+          product.ratingValue !== null &&
+          Number(product.ratingValue) >= 4.0
       )
-      .sort((a, b) => b.ratingValue! - a.ratingValue!);
+      .sort((a, b) => Number(b.ratingValue ?? 0) - Number(a.ratingValue ?? 0));
 
     return featuredProducts.map((product) =>
       this.transformProductImages(product)

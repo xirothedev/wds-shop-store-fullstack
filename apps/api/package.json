@@ -36,6 +36,7 @@
     "@nestjs/throttler": "^6.5.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "@prisma/client-runtime-utils": "^7.2.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express-session": "^1.18.2",
     "argon2": "^0.44.0",
