@@ -9,12 +9,17 @@
 **Tên Project:** WDS Shop Store Fullstack
 **Repository:** [https://github.com/xirothedev/wds-shop-store-fullstack](https://github.com/xirothedev/wds-shop-store-fullstack)
 
+**Demo Deployment:**
+
+- **Web Client:** [https://shoe.naberious.dev](https://shoe.naberious.dev)
+- **API Server:** [https://api.shoe.naberious.dev](https://api.shoe.naberious.dev)
+
 | STT | Thành viên      | Role               | Ghi chú                                         |
 | :-- | :-------------- | :----------------- | :---------------------------------------------- |
 | 1   | **Thành Trung** | Leader / Fullstack | Setup base, Authentication, Admin, Core Backend |
 | 2   | **Phan Kiệt**   | Member / Fullstack | Search, Product Showcase                        |
-| 3   | **Minh Phương** | Member / Fullstack | Cart Module                                     |
-| 4   | **Trần Tài**    | Member / Fullstack | Order & Purchase History                        |
+| 3   | **Minh Phương** | Member / Fullstack | Cart Module, Payment                            |
+| 4   | **Trần Tài**    | Member / Fullstack | Order History, Admin API                        |
 
 ---
 
@@ -38,12 +43,12 @@ Hệ thống đã có sẵn tài khoản Admin (được tạo khi seeding). Đ�
 
 Mức độ tham gia được đánh giá dựa trên khối lượng commit, độ phức tạp của tính năng và trách nhiệm trong dự án (Git History Analysis).
 
-| Thành viên      | Nhiệm vụ chi tiết                                                                                                                                                                                                                                                                                                    | Mức độ tham gia | Tự đánh giá                                                        |
-| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------: | :----------------------------------------------------------------- |
-| **Thành Trung** | - Khởi tạo dự án (Turborepo, Next.js, NestJS).<br>- Thiết kế Database Schema & Seeding (FakerJS).<br>- Module Authentication (JWT, Guards, Login/Register UI/API).<br>- Admin Panel (Layout, Product Management Base).<br>- Tích hợp Cloudflare R2 để lưu trữ ảnh.<br>- Landing Page UI & Design System foundations. |   100% (High)   | Leader, chịu trách nhiệm kiến trúc và các module lõi khó nhất.     |
-| **Phan Kiệt**   | - **Cart Module (Trọn gói FE + BE):**<br>- Xây dựng Cart API (CRUD Cart, Validate stock).<br>- Cart UI (Responsive Grid, logic tăng giảm số lượng).<br>- Authentication cho Cart (chỉ user đã login mới có cart).<br>- Xử lý các logic phức tạp về đồng bộ state giỏ hàng.                                           |   95% (High)    | Hoàn thành xuất sắc module Giỏ hàng với UI/UX tốt.                 |
-| **Minh Phương** | - **Search & Product Display:**<br>- API Search & Filter (Backend).<br>- Search Bar UI & Suggestions (Frontend).<br>- Fetch & Render dữ liệu Product Detail Page.<br>- Integration API cho danh sách sản phẩm trang chủ.                                                                                             |   90% (High)    | Đóng góp quan trọng vào luồng tìm kiếm và hiển thị sản phẩm chính. |
-| **Trần Tài**    | - **Order Module:**<br>- Xây dựng API Order (Tạo đơn hàng từ giỏ hàng).<br>- UI Trang "ĐÃ MUA" (Purchase History).<br>- Hỗ trợ hoàn thiện luồng Admin Product CRUD.<br>- Fix bugs và clean code một số phần.                                                                                                         |   85% (Good)    | Hoàn thành tốt chức năng cuối cùng của luồng mua hàng (Order).     |
+| Thành viên      | Nhiệm vụ chi tiết                                                                                                                                                                                                                                                                                                    | Mức độ tham gia | Tự đánh giá                                                                                    |
+| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------: | :--------------------------------------------------------------------------------------------- |
+| **Thành Trung** | - Khởi tạo dự án (Turborepo, Next.js, NestJS).<br>- Thiết kế Database Schema & Seeding (FakerJS).<br>- Module Authentication (JWT, Guards, Login/Register UI/API).<br>- Admin Panel (Layout, Product Management Base).<br>- Tích hợp Cloudflare R2 để lưu trữ ảnh.<br>- Landing Page UI & Design System foundations. |   100% (High)   | Leader, chịu trách nhiệm kiến trúc và các module lõi khó nhất.                                 |
+| **Minh Phương** | - **Cart Module:**<br>- Xây dựng Cart API (CRUD Cart, Validate stock).<br>- Cart UI (Responsive Grid, logic tăng giảm số lượng).<br>- Authentication cho Cart (chỉ user đã login mới có cart).<br>- Xử lý các logic phức tạp về đồng bộ state giỏ hàng.                                                              |   95% (High)    | Hoàn thành xuất sắc module Giỏ hàng với UI/UX tốt.                                             |
+| **Phan Kiệt**   | - **Search & Product Display:**<br>- API Search & Filter (Backend).<br>- Search Bar UI & Suggestions (Frontend).<br>- Fetch & Render dữ liệu Product Detail Page.<br>- Integration API cho danh sách sản phẩm trang chủ.                                                                                             |   95% (High)    | Đóng góp quan trọng vào luồng tìm kiếm và hiển thị sản phẩm chính.                             |
+| **Trần Tài**    | - **Order Module:**<br>- Xây dựng API Order (Tạo đơn hàng từ giỏ hàng).<br>- UI Trang "ĐÃ MUA" (Purchase History).<br>- Hỗ trợ hoàn thiện luồng Admin Product CRUD.<br>- Fix bugs và clean code một số phần.                                                                                                         |   95% (High)    | Hoàn thành tốt chức năng cuối cùng của luồng mua hàng (Order) và các API CRUD của trang admin. |
 
 ---
 
@@ -131,11 +136,12 @@ Nhóm đã hoàn thành 100% các yêu cầu cơ bản và một số yêu cầu
     pnpm turbo db:seed --filter=api
     ```
 4.  Chạy ứng dụng:
+
     ```bash
     pnpm dev
     ```
 
     - Web: `http://localhost:3000`
-    - API: `http://localhost:3005`
+    - API: `http://localhost:4000`
 
 ---
